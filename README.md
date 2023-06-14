@@ -1,1 +1,1 @@
-# dca-wp-plugin
+# DCA Events Wordpress Plugin
