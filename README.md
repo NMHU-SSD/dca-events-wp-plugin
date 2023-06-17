@@ -5,4 +5,4 @@ New Mexico Department of Cultural Affairs
 Wordpress Plugin for DCA Events API
 
 ## Internship
-Student: Anita Martin
+Student: [Anita Martin](https://github.com/anita-martin5703/)
