@@ -14,7 +14,7 @@ function dca_events_plugin($dca_atts)
 		$dca_atts = shortcode_atts(
 			array(
 				'current' => '', // default - current month or day
-				'limit' => null // default - num of events to display
+				'limit' => 5 // default - num of events to display (for now 5 if empty)
 			),
 			$dca_atts
 		)
@@ -36,16 +36,15 @@ function dca_events_plugin($dca_atts)
 		$user_curr = ($dca_atts['current']);
 		$div_box .= "<h5>" . "Current: " . $user_curr  ."<br>" . "</h5>";
 
-		// check the value of limit - int number
-		$user_limit = ($dca_atts['limit']);
-		$div_box .= "<h5>" . " Limit: " . $user_limit . "<br>" . "</h5>";
+		// check the value of limit - number
+		$maxevents = ($dca_atts['limit']);
+		$div_box .= "<h5>" . " Limit: " . $maxevents . "<br>" . "</h5>";
 
 		// check the current date
 		$currentDate = date('m-d-Y');
 		$div_box .= "<h5>" . "Current date: " . $currentDate . "<br>" . "</h5>";
 
 		// check the limit output for the num of event to display
-		$maxevents= $user_limit;
 		foreach (new LimitIterator($events->item, 0, $maxevents) as $itm) {
 			$link_title = $itm->title;
 			$link_date = $itm->pubDate;
@@ -56,30 +55,25 @@ function dca_events_plugin($dca_atts)
 			$timestamp_month = idate('m', $xml->$events->item->pubDate);
 			$timestamp_day = idate('d', $xml->$events->item->pubDate);
 			
+			// If current month equals timestamp month do the following
+			if ($user_curr == 'month' && $curr_month == $timestamp_month) {
+				$div_box .= "<h4>" . "Current Month Events " . "<br>" . "</h4>";
+				$div_box .= "<h4>" . "Title: " . $link_title . "<br>" . "</h4>";
+				$div_box .= "<p>" . $link_date . "<br>" . "</p>";
+				$div_box .= "<p>" . "Description: " . $link_description . "<br>" . "</p>";
+			}
+			// default: 
+			// else if current day equals timestamp day & current month equals timestamp month
+			// do the following
+			elseif ($user_curr == 'date' && $curr_day == $timestamp_day && $curr_month == $timestamp_month)
 			{
-				// If current month equals timestamp month do the following
-				if ($curr_month == $timestamp_month) {
-					$div_box .= "<h4>" . "Title: " . $link_title . "<br>" . "</h4>";
-					$div_box .= "<p>" . $link_date . "<br>" . "</p>";
-					$div_box .= "<p>" . "Description: " . $link_description . "<br>" . "</p>";
-				}
-				// default: 
-				// else if current day equals timestamp day & current month equals timestamp month
-				// do the following
-				elseif ($curr_day == $timestamp_day && $curr_month == $timestamp_month)
-				{
-					$div_box .= "<h4>" . "Current Events " . "<br>" . "</h4>";
-					$div_box .= "<h4>" . "Title: " . $link_title . "<br>" . "</h4>";
-					$div_box .= "<p>" . $link_date . "<br>" . "</p>";
-					$div_box .= "<p>" . "Description: " . $link_description . "<br>" . "</p>";
-				}
+				$div_box .= "<h4>" . "Current Date Events " . "<br>" . "</h4>";
+				$div_box .= "<h4>" . "Title: " . $link_title . "<br>" . "</h4>";
+				$div_box .= "<p>" . $link_date . "<br>" . "</p>";
+				$div_box .= "<p>" . "Description: " . $link_description . "<br>" . "</p>";
 			}
 
 		}
-
-
-		// $div_box .= "<h4>" . "No events for " .  . "<br>" . "</h4>";
-		// move or delete
 	}
 	// end div box
 	$div_box .= '</div>';
