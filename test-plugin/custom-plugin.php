@@ -8,15 +8,15 @@
  * Author URI: https://www.nhccnm.org/events/feed/
  **/
 
-function dca_events_plugin($month, $num_of_events)
+function dca_events_plugin($dca_atts)
 {
 	extract(
 		$dca_atts = shortcode_atts(
 			array(
-				'current' => '', // current month or day
-				'limit' => null // default value of null
+				'current' => '', // default - current month or day
+				'limit' => null // default - num of events to display
 			),
-			$month, $num_of_events
+			$dca_atts
 		)
 	);
 
@@ -32,54 +32,53 @@ function dca_events_plugin($month, $num_of_events)
 		$div_box .= "<h5>" . "Link: " . $events->link . "<br> " . "</h5>";
 		$div_box .= "<h5>" . $events->description . "<br>" . "</h5>";
 
-		// check the value of $month - for now (day or month)
+		// check the value of current - day or month
 		$user_curr = ($dca_atts['current']);
 		$div_box .= "<h5>" . "Current: " . $user_curr  ."<br>" . "</h5>";
-		$div_box .= "<h5>" . "$ month " . $month  ."<br>" . "</h5>";
 
-		// check the value of $month - for now (day or month)
+		// check the value of limit - int number
 		$user_limit = ($dca_atts['limit']);
 		$div_box .= "<h5>" . " Limit: " . $user_limit . "<br>" . "</h5>";
 
-		// php code to check the current date
-		$currentDateTime = new DateTime('now');
-		$div_box .= "<h5>" . "Current date: " . $currentDateTime . "<br>" . "</h5>";
+		// check the current date
+		$currentDate = date('m-d-Y');
+		$div_box .= "<h5>" . "Current date: " . $currentDate . "<br>" . "</h5>";
 
-		foreach ($events->item as $itm) {
+		// check the limit output for the num of event to display
+		$maxevents= $user_limit;
+		foreach (new LimitIterator($events->item, 0, $maxevents) as $itm) {
 			$link_title = $itm->title;
 			$link_date = $itm->pubDate;
 			$link_description = $itm->description;
 			
-
-
 			$curr_month = idate('m');
 			$curr_day = idate('d');
 			$timestamp_month = idate('m', $xml->$events->item->pubDate);
 			$timestamp_day = idate('d', $xml->$events->item->pubDate);
-
-			// check the limit output the # of event
-			// check the value of current first
-
-			// If current month equals timestamp month do the following
-			if ($curr_month == $timestamp_month) {
-				$div_box .= "<h4>" . "Title: " . $link_title . "<br>" . "</h4>";
-				$div_box .= "<p>" . $link_date . "<br>" . "</p>";
-				$div_box .= "<p>" . "Description: " . $link_description . "<br>" . "</p>";
-			}
-			// default: 
-			// else if current day equals timestamp day & current month equals timestamp month
-			// do the following
-			elseif ($curr_day == $timestamp_day && $curr_month == $timestamp_month)
+			
 			{
-				$div_box .= "<h4>" . "Current Events " . "<br>" . "</h4>";
-				$div_box .= "<h4>" . "Title: " . $link_title . "<br>" . "</h4>";
-				$div_box .= "<p>" . $link_date . "<br>" . "</p>";
-				$div_box .= "<p>" . "Description: " . $link_description . "<br>" . "</p>";
+				// If current month equals timestamp month do the following
+				if ($curr_month == $timestamp_month) {
+					$div_box .= "<h4>" . "Title: " . $link_title . "<br>" . "</h4>";
+					$div_box .= "<p>" . $link_date . "<br>" . "</p>";
+					$div_box .= "<p>" . "Description: " . $link_description . "<br>" . "</p>";
+				}
+				// default: 
+				// else if current day equals timestamp day & current month equals timestamp month
+				// do the following
+				elseif ($curr_day == $timestamp_day && $curr_month == $timestamp_month)
+				{
+					$div_box .= "<h4>" . "Current Events " . "<br>" . "</h4>";
+					$div_box .= "<h4>" . "Title: " . $link_title . "<br>" . "</h4>";
+					$div_box .= "<p>" . $link_date . "<br>" . "</p>";
+					$div_box .= "<p>" . "Description: " . $link_description . "<br>" . "</p>";
+				}
 			}
+
 		}
 
 
-		// $div_box .= "<h4>" . "No events for " . $month . "<br>" . "</h4>";
+		// $div_box .= "<h4>" . "No events for " .  . "<br>" . "</h4>";
 		// move or delete
 	}
 	// end div box
