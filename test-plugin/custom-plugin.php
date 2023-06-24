@@ -8,17 +8,41 @@
  * Author URI: https://www.nhccnm.org/events/feed/
  **/
 
-function dca_events_plugin($dca_atts)
+function dca_events_plugin($dca_atts = [])
 {
-	extract(
-		$dca_atts = shortcode_atts(
-			array(
-				'current' => '', // default - current month or day
-				'limit' => 5 // default - num of events to display (for now 5 if empty)
-			),
-			$dca_atts
-		)
+	// normalize attibutes keys, to lowercase
+	$dca_atts = array_change_key_case((array) $dca_atts, CASE_LOWER);
+	
+
+	$dca_atts = shortcode_atts(
+		array(
+			'current-day' => false, // default - current day is false
+			'current-month' => false, // default - current month is false
+			'date-range' => false, // default - date range is set to false
+			'range-start' => NULL, // default - date start range is set to NULL
+			'range-end' => NULL, // default - date end range is set to NULL
+			'limit' => NULL // default - limit is set to NULL
+		),
+		$dca_atts
 	);
+
+	// check options and validate - not valid will result in NULL
+	$_CURR_DAY_OPT = filter_var($dca_atts['current-day'], FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
+	$_CURR_MONTH_OPT = filter_var($dca_atts['current-month'], FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
+	$_DATE_RANGE_OPT = filter_var($dca_atts['date-range'], FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
+
+	// set correct timezone and set/format range dates
+	date_default_timezone_set('America/Denver');
+	$_DATE_RANGE_START = ($dca_atts['range-start'] == NULL) ? date('m-d-Y') : reformatDate($dca_atts['range-start']);
+	$_DATE_RANGE_END = ($dca_atts['range-end'] == NULL) ? date('m-d-Y') : reformatDate($dca_atts['range-start']);
+
+	// set default limit if null - else typecast
+	$_LIMIT_OPT = ($dca_atts['limit'] == NULL) ? 10 : intval($dca_atts['limit']);
+
+	// helper functions for dca_events shorcode
+	function reformatDate($date) {
+		return DateTime::createFromFormat('m-d-Y', $date)->format('m-d-Y');
+	}
 
 	$feed_setting = get_option('rss_events_page_option_name')['rss_feed_0'];
 	$get_feed = file_get_contents($feed_setting);
@@ -32,20 +56,21 @@ function dca_events_plugin($dca_atts)
 		$div_box .= "<h5>" . "Link: " . $events->link . "<br> " . "</h5>";
 		$div_box .= "<h5>" . $events->description . "<br>" . "</h5>";
 
-		// check the value of current - day or month
-		$user_curr = ($dca_atts['current']);
-		$div_box .= "<h5>" . "Current: " . $user_curr  ."<br>" . "</h5>";
+		// check the values of all variables
+		$div_box .= "<h5>" . "Current day = " . $_CURR_DAY_OPT  ."<br>" . "</h5>"; // works
+		$div_box .= "<h5>" . "Current month = " . $_CURR_MONTH_OPT . "<br>" . "</h5>"; // works
+		$div_box .= "<h5>" . "Date range = " . $_DATE_RANGE_OPT . "<br>" . "</h5>"; // works
+		$div_box .= "<h5>" . "Limit = " . $_LIMIT_OPT . "<br>" . "</h5>"; // works
 
-		// check the value of limit - number
-		$maxevents = ($dca_atts['limit']);
-		$div_box .= "<h5>" . " Limit: " . $maxevents . "<br>" . "</h5>";
-
+		$div_box .= "<h5>" . "Date range start = " . $_DATE_RANGE_START . "<br>" . "</h5>"; 
+		$div_box .= "<h5>" . "Date Range end = " . $_DATE_RANGE_END . "<br>" . "</h5>";
+		
 		// check the current date
 		$currentDate = date('m-d-Y');
-		$div_box .= "<h5>" . "Current date: " . $currentDate . "<br>" . "</h5>";
+		$div_box .= "<h5>" . "Today's date: " . $currentDate . "<br>" . "</h5>";
 
 		// check the limit output for the num of event to display
-		foreach (new LimitIterator($events->item, 0, $maxevents) as $itm) {
+		foreach (new LimitIterator($events->item, 0, $_LIMIT_OPT) as $itm) {
 			$link_title = $itm->title;
 			$link_date = $itm->pubDate;
 			$link_description = $itm->description;
@@ -58,21 +83,20 @@ function dca_events_plugin($dca_atts)
 			// If current month equals timestamp month do the following
 			if ($user_curr == 'month' && $curr_month == $timestamp_month) {
 				$div_box .= "<h4>" . "Current Month Events " . "<br>" . "</h4>";
-				$div_box .= "<h4>" . "Title: " . $link_title . "<br>" . "</h4>";
+				$div_box .= "<h4>" . "Event Name: " . $link_title . "<br>" . "</h4>";
 				$div_box .= "<p>" . $link_date . "<br>" . "</p>";
 				$div_box .= "<p>" . "Description: " . $link_description . "<br>" . "</p>";
 			}
 			// default: 
 			// else if current day equals timestamp day & current month equals timestamp month
 			// do the following
-			elseif ($user_curr == 'date' && $curr_day == $timestamp_day && $curr_month == $timestamp_month)
+			elseif ($user_curr == 'day' && $curr_day == $timestamp_day && $curr_month == $timestamp_month)
 			{
-				$div_box .= "<h4>" . "Current Date Events " . "<br>" . "</h4>";
-				$div_box .= "<h4>" . "Title: " . $link_title . "<br>" . "</h4>";
+				$div_box .= "<h4>" . "Current Day Events " . "<br>" . "</h4>";
+				$div_box .= "<h4>" . "Event Name: " . $link_title . "<br>" . "</h4>";
 				$div_box .= "<p>" . $link_date . "<br>" . "</p>";
 				$div_box .= "<p>" . "Description: " . $link_description . "<br>" . "</p>";
 			}
-
 		}
 	}
 	// end div box
@@ -119,7 +143,15 @@ class RSSEventsPage
 
 						<div class="wrap">
 							<h2>DCA Events Plugin</h2>
-							<p></p>
+							<h3>Shortcode Options</h3>
+								<ul>
+								<li>&emsp; limit => set number of events to display</li>
+								<li>&emsp; current-day => set true to show events for today</li>
+								<li>&emsp; current-month => set true to show events for this month</li>
+								<li>&emsp; date-range => set true to show events for range of dates</li>
+								<li>&emsp; range-start => set start date in mm-dd-yyyy format</li>
+								<li>&emsp; range-end => set end date in mm-dd-yyyy format</li>
+								</ul> 
 							<?php settings_errors(); ?>
 
 							<form method="post" action="options.php">
