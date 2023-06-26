@@ -8,7 +8,7 @@
  * Author URI: https://www.nhccnm.org/events/feed/
  **/
 
-function dca_events_plugin($dca_atts = [])
+function dca_events_plugin($atts = [])
 {
 	// normalize attibutes keys, to lowercase
 	$dca_atts = array_change_key_case((array) $dca_atts, CASE_LOWER);
@@ -27,7 +27,7 @@ function dca_events_plugin($dca_atts = [])
 			// default - date end range is set to NULL
 			'limit' => NULL // default - limit is set to NULL
 		),
-		$dca_atts
+		$atts
 	);
 
 	// check options and validate - not valid will result in NULL
