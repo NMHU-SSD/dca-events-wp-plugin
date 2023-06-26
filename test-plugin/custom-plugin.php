@@ -12,15 +12,19 @@ function dca_events_plugin($dca_atts = [])
 {
 	// normalize attibutes keys, to lowercase
 	$dca_atts = array_change_key_case((array) $dca_atts, CASE_LOWER);
-	
 
 	$dca_atts = shortcode_atts(
 		array(
-			'current-day' => false, // default - current day is false
-			'current-month' => false, // default - current month is false
-			'date-range' => false, // default - date range is set to false
-			'range-start' => NULL, // default - date start range is set to NULL
-			'range-end' => NULL, // default - date end range is set to NULL
+			'current-day' => false,
+			// default - current day is false
+			'current-month' => false,
+			// default - current month is false
+			'date-range' => false,
+			// default - date range is set to false
+			'range-start' => NULL,
+			// default - date start range is set to NULL
+			'range-end' => NULL,
+			// default - date end range is set to NULL
 			'limit' => NULL // default - limit is set to NULL
 		),
 		$dca_atts
@@ -39,9 +43,24 @@ function dca_events_plugin($dca_atts = [])
 	// set default limit if null - else typecast
 	$_LIMIT_OPT = ($dca_atts['limit'] == NULL) ? 10 : intval($dca_atts['limit']);
 
-	// helper functions for dca_events shorcode
-	function reformatDate($date) {
+	// helper functions for dca_events shortcode
+	function reformatDate($date)
+	{
 		return DateTime::createFromFormat('m-d-Y', $date)->format('m-d-Y');
+	}
+	function getTodayEvents()
+	{
+
+	}
+
+	function getMonthEvents()
+	{
+
+	}
+
+	function getRangeEvents()
+	{
+
 	}
 
 	$feed_setting = get_option('rss_events_page_option_name')['rss_feed_0'];
@@ -56,47 +75,57 @@ function dca_events_plugin($dca_atts = [])
 		$div_box .= "<h5>" . "Link: " . $events->link . "<br> " . "</h5>";
 		$div_box .= "<h5>" . $events->description . "<br>" . "</h5>";
 
-		// check the values of all variables
-		$div_box .= "<h5>" . "Current day = " . $_CURR_DAY_OPT  ."<br>" . "</h5>"; // works
-		$div_box .= "<h5>" . "Current month = " . $_CURR_MONTH_OPT . "<br>" . "</h5>"; // works
-		$div_box .= "<h5>" . "Date range = " . $_DATE_RANGE_OPT . "<br>" . "</h5>"; // works
-		$div_box .= "<h5>" . "Limit = " . $_LIMIT_OPT . "<br>" . "</h5>"; // works
+		// check the values of all variables make sure it is working - will be taken out later
+		// $div_box .= "<h5>" . "Current day = " . $_CURR_DAY_OPT  ."<br>" . "</h5>"; // works
+		// $div_box .= "<h5>" . "Current month = " . $_CURR_MONTH_OPT . "<br>" . "</h5>"; // works
+		// $div_box .= "<h5>" . "Date range = " . $_DATE_RANGE_OPT . "<br>" . "</h5>"; // works
+		// $div_box .= "<h5>" . "Limit = " . $_LIMIT_OPT . "<br>" . "</h5>"; // works
+		// $div_box .= "<h5>" . "Date range start = " . $_DATE_RANGE_START . "<br>" . "</h5>"; 
+		// $div_box .= "<h5>" . "Date Range end = " . $_DATE_RANGE_END . "<br>" . "</h5>";
 
-		$div_box .= "<h5>" . "Date range start = " . $_DATE_RANGE_START . "<br>" . "</h5>"; 
-		$div_box .= "<h5>" . "Date Range end = " . $_DATE_RANGE_END . "<br>" . "</h5>";
-		
 		// check the current date
-		$currentDate = date('m-d-Y');
-		$div_box .= "<h5>" . "Today's date: " . $currentDate . "<br>" . "</h5>";
+		// $currentDate = date('m-d-Y');
+		// $div_box .= "<h5>" . "Today's date: " . $currentDate . "<br>" . "</h5>";
+
 
 		// check the limit output for the num of event to display
 		foreach (new LimitIterator($events->item, 0, $_LIMIT_OPT) as $itm) {
-			$link_title = $itm->title;
-			$link_date = $itm->pubDate;
-			$link_description = $itm->description;
-			
-			$curr_month = idate('m');
-			$curr_day = idate('d');
 			$timestamp_month = idate('m', $xml->$events->item->pubDate);
-			$timestamp_day = idate('d', $xml->$events->item->pubDate);
-			
-			// If current month equals timestamp month do the following
-			if ($user_curr == 'month' && $curr_month == $timestamp_month) {
-				$div_box .= "<h4>" . "Current Month Events " . "<br>" . "</h4>";
-				$div_box .= "<h4>" . "Event Name: " . $link_title . "<br>" . "</h4>";
-				$div_box .= "<p>" . $link_date . "<br>" . "</p>";
-				$div_box .= "<p>" . "Description: " . $link_description . "<br>" . "</p>";
+			$timestamp_day = date('m-d-Y', $xml->$events->item->pubDate);
+
+			$currentDate = date('m-d-Y');
+			// if current-day is true and current date matches pubdate date
+			if ($_CURR_DAY_OPT == true && $currentDate == $timestamp_day) {
+				// output the events for only the current date only
+				$div_box .= "<h4>" . "Event Name: " . $itm->title . "<br>" . "</h4>";
+				$div_box .= "<p>" . "Date: " . $itm->pubDate . "<br>" . "</p>";
+				$div_box .= "<p>" . "Description: " . $itm->description . "<br>" . "</p>";
+
 			}
-			// default: 
-			// else if current day equals timestamp day & current month equals timestamp month
-			// do the following
-			elseif ($user_curr == 'day' && $curr_day == $timestamp_day && $curr_month == $timestamp_month)
-			{
-				$div_box .= "<h4>" . "Current Day Events " . "<br>" . "</h4>";
-				$div_box .= "<h4>" . "Event Name: " . $link_title . "<br>" . "</h4>";
-				$div_box .= "<p>" . $link_date . "<br>" . "</p>";
-				$div_box .= "<p>" . "Description: " . $link_description . "<br>" . "</p>";
+			$currentMonth = idate('m');
+			// if current-month is true and current month matches pubdate month
+			if ($_CURR_MONTH_OPT == true && $currentMonth == $timestamp_month) {
+				$div_box .= "<h4>" . $currentMonth . "<br>" . "</h4>";
+				$div_box .= "<h4>" . $timestamp_month . "<br>" . "</h4>";
+
+				// output the events for only the current month only
+				$div_box .= "<h4>" . "Event Name: " . $itm->title . "<br>" . "</h4>";
+				$div_box .= "<p>" . "Date: " . $itm->pubDate . "<br>" . "</p>";
+				$div_box .= "<p>" . "Description: " . $itm->description . "<br>" . "</p>";
+
 			}
+			//if date-range is true current month is false and current day is false
+			if ($_DATE_RANGE_OPT == true) {
+				$events_date = $itm->pubDate;
+				// output events for the date range selected
+				if ($events_date >= $_DATE_RANGE_START && $events_date <= $_DATE_RANGE_END) {
+					$div_box .= "<h4>" . "Event Name: " . $itm->title . "<br>" . "</h4>";
+					$div_box .= "<p>" . "Date: " . $itm->pubDate . "<br>" . "</p>";
+					$div_box .= "<p>" . "Description: " . $itm->description . "<br>" . "</p>";
+				}
+
+			}
+
 		}
 	}
 	// end div box
@@ -141,28 +170,28 @@ class RSSEventsPage
 	{
 		$this->rss_events_page_options = get_option('rss_events_page_option_name'); ?>
 
-						<div class="wrap">
-							<h2>DCA Events Plugin</h2>
-							<h3>Shortcode Options</h3>
-								<ul>
-								<li>&emsp; limit => set number of events to display</li>
-								<li>&emsp; current-day => set true to show events for today</li>
-								<li>&emsp; current-month => set true to show events for this month</li>
-								<li>&emsp; date-range => set true to show events for range of dates</li>
-								<li>&emsp; range-start => set start date in mm-dd-yyyy format</li>
-								<li>&emsp; range-end => set end date in mm-dd-yyyy format</li>
-								</ul> 
-							<?php settings_errors(); ?>
+										<div class="wrap">
+											<h2>DCA Events Plugin</h2>
+											<h3>Shortcode Options</h3>
+												<ul>
+												<li>&emsp; limit => set number of events to display</li>
+												<li>&emsp; current-day => set true to show events for today</li>
+												<li>&emsp; current-month => set true to show events for this month</li>
+												<li>&emsp; date-range => set true to show events for range of dates</li>
+												<li>&emsp; range-start => set start date in mm-dd-yyyy format</li>
+												<li>&emsp; range-end => set end date in mm-dd-yyyy format</li>
+												</ul> 
+											<?php settings_errors(); ?>
 
-							<form method="post" action="options.php">
-								<?php
-								settings_fields('rss_events_page_option_group');
-								do_settings_sections('rss-events-page-admin');
-								submit_button();
-								?>
-							</form>
-						</div>
-			<?php }
+											<form method="post" action="options.php">
+												<?php
+												settings_fields('rss_events_page_option_group');
+												do_settings_sections('rss-events-page-admin');
+												submit_button();
+												?>
+											</form>
+										</div>
+					<?php }
 
 	public function rss_events_page_page_init()
 	{
