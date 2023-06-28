@@ -11,7 +11,7 @@
 function dca_events_plugin($atts = [])
 {
 	// normalize attibutes keys, to lowercase
-	$dca_atts = array_change_key_case((array) $dca_atts, CASE_LOWER);
+	$dca_atts = array_change_key_case((array) $atts, CASE_LOWER);
 
 	$dca_atts = shortcode_atts(
 		array(
