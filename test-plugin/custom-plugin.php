@@ -43,26 +43,6 @@ function dca_events_plugin($atts = [])
 	// set default limit if null - else typecast
 	$_LIMIT_OPT = ($dca_atts['limit'] == NULL) ? 10 : intval($dca_atts['limit']);
 
-	// helper functions for dca_events shortcode
-	function reformatDate($date)
-	{
-		return DateTime::createFromFormat('m-d-Y', $date)->format('m-d-Y');
-	}
-	function getTodayEvents()
-	{
-
-	}
-
-	function getMonthEvents()
-	{
-
-	}
-
-	function getRangeEvents()
-	{
-
-	}
-
 	$feed_setting = get_option('rss_events_page_option_name')['rss_feed_0'];
 	$get_feed = file_get_contents($feed_setting);
 	$xml = simplexml_load_string($get_feed);
@@ -134,6 +114,26 @@ function dca_events_plugin($atts = [])
 	// return output
 	return $div_box;
 }
+// helper functions for dca_events shortcode
+	function reformatDate($date)
+	{
+		return DateTime::createFromFormat('m-d-Y', $date)->format('m-d-Y');
+	}
+	function getTodayEvents()
+	{
+
+	}
+
+	function getMonthEvents()
+	{
+
+	}
+
+	function getRangeEvents()
+	{
+
+	}
+
 add_shortcode('dca_events', 'dca_events_plugin');
 
 function register_shortcodes()
