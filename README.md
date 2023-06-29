@@ -1,9 +1,13 @@
 # DCA Events Wordpress Plugin
-New Mexico Department of Cultural Affairs
-
 Wordpress Plugin for NM DCA Media Center API
+Display events via [dca_events] shortcode.
 
-Access events via wordpress shortcode options
+shortcode options:
+- id
+- limit
+- date_start
+- date_end
 
 ## Internship
-Student: [Anita Martin](https://github.com/anita-martin5703/)
+Client: New Mexico Department of Cultural Affairs
+Student Intern: [Anita Martin](https://github.com/anita-martin5703/)
