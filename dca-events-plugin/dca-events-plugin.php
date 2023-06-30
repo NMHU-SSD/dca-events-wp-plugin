@@ -54,8 +54,8 @@ function dca_events_plugin($atts = [])
 
 	//set correct timezone and set/format range dates
 	date_default_timezone_set('America/Denver');
-	$_DATE_RANGE_START = ($atts['range-start'] == NULL) ? date("m-d-Y") : reformatDate($atts['range-start']);
-	$_DATE_RANGE_END = ($atts['range-end'] == NULL) ? date("m-d-Y") : reformatDate($atts['range-end']);
+	$_DATE_RANGE_START = ($atts['range-start'] == NULL) ? date("Y-m-d") : reformatDate($atts['range-start']);
+	$_DATE_RANGE_END = ($atts['range-end'] == NULL) ? date("Y-m-d") : reformatDate($atts['range-end']);
 
 	// set default limit if null - else typecast shortcode val
 	$_LIMIT_OPT = ($atts['limit'] == NULL) ? 10 : intval($atts['limit']);
@@ -66,7 +66,7 @@ function dca_events_plugin($atts = [])
 
 	//get api results
 	//docs: https://developer.wordpress.org/rest-api/using-the-rest-api/
-	//sample: http://nmdcamediadev.wpengine.com//wp-json/tribe/events/v1/events/?page=10&start_date=2023-06-26&end_date=023-06-29&venue=108
+	//sample: http://nmdcamediadev.wpengine.com//wp-json/tribe/events/v1/events/?page=10&start_date=2023-06-26&end_date=2023-06-29&venue=108
 
 	//start api string
 	$_API_URL = "http://nmdcamediadev.wpengine.com//wp-json/tribe/events/v1/events/?";
@@ -118,27 +118,28 @@ function dca_events_plugin($atts = [])
 
 	// Testing [dca_events date-range='true' range-start=2023-06-26 range-end=2023-06-29]
 
-	$api_url = $_API_URL;
-	$json_data = file_get_contents($api_url);
+	$json_data = file_get_contents($_API_URL);
 	$response_data = json_decode($json_data);
 	$event_data = $response_data;
 
 	// return results (html output)
 	// start div box
-	echo("<script>console.log('PHP: " . $api_url . "');</script>");
+	echo("<script>console.log('PHP: " . $_API_URL . "');</script>");
 	
-	$div_box = '<div class="dca-event-box">';
+	$output = '<div class="dca-events">';
 
 	foreach ($event_data as $events) {
-			$div_box .= "<h5>" . "Venue: " . $events->venue->url->venue . "<br> " . "</h5>";
-			$div_box .= "<h5>" . "Title: " . $events->title . "<br> " . "</h5>";
-			$div_box .= "<h5>" . "Description: " . $events->venue->url->description . "<br>" . "</h5>";
+			$output = '<div class="dca-event">';
+			$output .= "<b>" . "Venue: " . $events->venue->url->venue. "</b>" . "<br> " ;
+			$output .= "<h5>" . "Title: " . $events->title . "</h5>" . . "<br> ";
+			$output .= "<p>" . "Description: " . $events->venue->url->description . "</p>" . . "<br>";
+			$output = '</div>';
 	}
 	// end div box
-	$div_box .= '</div>';
+	$output .= '</div>';
 
 	// return output
-	return $div_box;
+	return $output;
 
 }
 
