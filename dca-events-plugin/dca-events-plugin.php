@@ -131,8 +131,8 @@ function dca_events_plugin($atts = [])
 	foreach ($event_data as $events) {
 			$output = '<div class="dca-event">';
 			$output .= "<b>" . "Venue: " . $events->venue->url->venue. "</b>" . "<br> " ;
-			$output .= "<h5>" . "Title: " . $events->title . "</h5>" . . "<br> ";
-			$output .= "<p>" . "Description: " . $events->venue->url->description . "</p>" . . "<br>";
+			$output .= "<h5>" . "Title: " . $events->title . "</h5>" . "<br> ";
+			$output .= "<p>" . "Description: " . $events->venue->url->description . "</p>" . "<br>";
 			$output = '</div>';
 	}
 	// end div box
