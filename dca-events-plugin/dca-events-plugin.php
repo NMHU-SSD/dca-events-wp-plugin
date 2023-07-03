@@ -29,28 +29,16 @@ function dca_events_plugin($atts = [])
 	//gets shortcode vals
 	$atts = shortcode_atts(
 		array(
-			'id' => NULL,
-			//site id for museum
-			'current-day' => false,
-			//events by current day
-			'current-month' => false,
-			//events by current month
-			'date-range' => false,
-			//events by range
-			'range-start' => NULL,
-			//start range
-			'range-end' => NULL,
-			//end range
+			'id' => NULL, //site id for museum (venue id)
+			'current-day' => false, //events by current day
+			'current-month' => false, //events by current month
+			'date-range' => false, //events by range
+			'range-start' => NULL, //start range
+			'range-end' => NULL, //end range
 			'limit' => NULL // num of events to display
 		),
 		$atts
 	);
-
-	// helper functions for dca_events shortcode
-	function reformatDate($date)
-	{
-		return DateTime::createFromFormat('Y-m-d', $date)->format('Y-m-d');
-	}
 
 	// check options and validate - not valid will result in NULL
 	$_CURR_DAY_OPT = filter_var($atts['current-day'], FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
@@ -75,7 +63,7 @@ function dca_events_plugin($atts = [])
 	//sample: http://nmdcamediadev.wpengine.com//wp-json/tribe/events/v1/events/?page=10&start_date=2023-06-26&end_date=2023-06-29&venue=108
 
 	//start api string
-	$_API_URL = "http://nmdcamediadev.wpengine.com//wp-json/tribe/events/v1/events/?";
+	$_API_URL = "http://nmdcamediadev.wpengine.com/wp-json/tribe/events/v1/events?";
 
 	//set limit in api url
 	$_API_URL .= "per_page=" . $_LIMIT_OPT;
@@ -100,12 +88,9 @@ function dca_events_plugin($atts = [])
 		$_API_URL .= "&start_date=" . $first . "&end_date=" . $last;
 
 	} else if ($_DATE_RANGE_OPT == true) {
-		//get_events_by_range
-		$start_date = $_DATE_RANGE_START;
-		$end_date = $_DATE_RANGE_END;
 
 		//format for url
-		$_API_URL .= "&start_date=" . $start_date . "&end_date=" . $end_date;
+		$_API_URL .= "&start_date=" . $_DATE_RANGE_START . "&end_date=" . $_DATE_RANGE_END;
 
 	} else {
 		//default - get_events_by_current_month
@@ -119,41 +104,49 @@ function dca_events_plugin($atts = [])
 	$_API_URL .= "&venue=" . $_SITE_ID;
 
 	//make API request
-	// USE LATER with dropdown: $feed_setting = get_option('rss_events_page_option_name')['rss_feed_0'];
-	// USE LATER with dropdown: $get_feed = file_get_contents($feed_setting + $_API_URL);
 
 	// Testing [dca_events date-range='true' range-start=2023-06-26 range-end=2023-06-29]
-	$json_data = file_get_contents($_API_URL);
-	$response_data = json_decode($json_data);
-	$event_data = $response_data;
+	$request = file_get_contents($_API_URL);
+	$event_data = json_decode($request);
+	
+	echo ("<script>console.log('PHP: " . $event_data . "');</script>");
+	 
 
-	if ($event_data !== null) {
-		// return results (html output)
-		// start div box
-		echo ("<script>console.log('PHP: " . $_API_URL . "');</script>");
+    $output .= '<div class="dca-events">';
+	
+	
+	if ($event_data!==null) {
+		
+		// results (html output)
 
-
-		foreach ($event_data as $events) {
-			print_r($events->venue->url->venue);
+		foreach ($event_data as $event) {
 
 			$output .= '<div class="dca-event">';
-			$output .= "<b>" . "Venue: " . $events->venue->url->venue . "</b>" . "<br> ";
-			$output .= "<h5>" . "Title: " . $events->title . "</h5>" . "<br> ";
-			$output .= "<p>" . "Description: " . $events->venue->url->description . "</p>" . "<br>";
+			$output .= "<h5>" . "Event Title: " . $event->title . "</h5>" . "<br> ";
+			$output .= "<p>" . "Event Description: " . $event->description . "</p>" . "<br>";
+			$output .= "<b>" . "Venue: " . $event->venue->venue . "</b>" . "<br> ";
+			$output .= "Address: " . $event->venue->address ; 
+			$output .= "</br>" . $event->venue->city . ", ", $event->venue->state. "<br> ";
 			$output .= '</div>';
 		}
 
 
 	} else {
-		$output .= "<b>" . "Unknown Error" . "</b>" . "<br> ";
-
+		$output .= "<p>" . "Unknown Error" . "</p>" . "<br> ";
 
 	}
-
-
+	
+	$output .= '</div>';
+	
 	// return output
 	return $output;
 
+}
+
+// helper functions for dca_events shortcode
+function reformatDate($date)
+{
+	return DateTime::createFromFormat('Y-m-d', $date)->format('Y-m-d');
 }
 
 //register shortcode
@@ -165,6 +158,8 @@ add_shortcode('dca_events', 'dca_events_plugin');
  *
  */
 
+
+//change setting paes based on this example - https://developer.wordpress.org/plugins/settings/custom-settings-page/
 
 // @Anita Your plugin settings page code goes here:
 class RSSEventsPage
