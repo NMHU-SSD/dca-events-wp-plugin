@@ -40,8 +40,9 @@ you put the stable version, in order to eliminate any doubt.
 
 This section describes how to install the plugin and get it working. e.g.
 
-1. Upload `dca-events-plugin.zip` in the 'Plugins' menu or unzip folder in the `/wp-content/plugins/` directory
-2. Activate the plugin through the 'Plugins' menu in WordPress
+1. Compress `dca-events-plugin` directory as .zip 
+2. Upload `dca-events-plugin.zip` in the 'Plugins' menu or unzip folder into the `/wp-content/plugins/` directory
+3. Activate the plugin through the 'Plugins' menu in WordPress
 
 == Frequently Asked Questions ==
 
@@ -49,7 +50,7 @@ This section describes how to install the plugin and get it working. e.g.
 
 The following shortcode options can be set:
 
-- id = set id number for site
+- site = set id number for site
 - limit = set number of events to display
 - today = set true to show events for today
 - current-month = set true to show events for this month
@@ -68,8 +69,8 @@ The NMDCA Media Center is a wordpress website and REST API for events and exhibi
 Endpoint:
 - https://nmdcamediadev.wpengine.com/wp-json/tribe/events/v1/events/
 
-You can see these parameters:
-- per_page
+Some parameters:
+- page = number of results
 - start_date
 - end_date
 - venue
@@ -77,8 +78,11 @@ You can see these parameters:
 Query example:
 - http://nmdcamediadev.wpengine.com//wp-json/tribe/events/v1/events/?per_page=25&start_date=2023-06-26&end_date=023-06-29&venue=108
 
-Docs:
-- https://developer.wordpress.org/rest-api/using-the-rest-api/pagination/
+API doc:
+https://nmdcamediadev.wpengine.com/wp-json/tribe/events/v1/doc
+
+WPDocs:
+- https://developer.wordpress.org/rest-api/using-the-rest-api/
 
 == Changelog ==
 
