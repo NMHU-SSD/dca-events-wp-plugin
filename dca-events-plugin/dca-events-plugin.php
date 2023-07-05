@@ -29,16 +29,11 @@ function dca_events_plugin($atts = [])
 	//gets shortcode vals
 	$atts = shortcode_atts(
 		array(
-			'id' => NULL,
-			//site id for museum
-			'current-day' => false,
-			//events by current day
-			'current-month' => false,
-			//events by current month
-			'date-range' => false,
-			//events by range
-			'range-start' => NULL,
-			//start range
+			'id' => NULL, //site id for museum
+			'current-day' => false, //events by current day
+			'current-month' => false, //events by current month
+			'date-range' => false, //events by range
+			'range-start' => NULL, //start range
 			'range-end' => NULL, //end range
 			'limit' => NULL // num of events to display
 		),
@@ -65,9 +60,10 @@ function dca_events_plugin($atts = [])
 	// set default limit if null - else typecast shortcode val
 	$_LIMIT_OPT = ($atts['limit'] == NULL) ? 10 : intval($atts['limit']);
 
-	//if null get events from all venues or set default in settings menu? (todo: get id from settings dropdown)
-	//using hardcoded id for now
-	$_SITE_ID = ($atts['id'] == NULL) ? 108 : intval($atts['id']);
+	//get events from set default in settings menu
+	$_SITE_ID = get_option('dca_events_plugin_option_name')['venue_id_0'];
+	// TODO: should I set a default for all events in the dropdown?
+	//       if so how do I do that its just with no ?venues in the api right?
 
 	//get api results
 	//docs: https://developer.wordpress.org/rest-api/using-the-rest-api/
@@ -114,7 +110,7 @@ function dca_events_plugin($atts = [])
 	}
 
 	//set venue in api url
-	$_API_URL .= "&venue=" . $_SITE_ID;
+	$_API_URL .= "&venues=" . $_SITE_ID;
 
 	//make API request
 	$json_data = file_get_contents($_API_URL);
@@ -169,18 +165,12 @@ class DCAEventsPlugin
 	public function dca_events_plugin_add_plugin_page()
 	{
 		add_menu_page(
-			'DCA Events Plugin',
-			// page_title
-			'DCA Events Plugin',
-			// menu_title
-			'manage_options',
-			// capability
-			'dca-events-plugin',
-			// menu_slug
-			array($this, 'dca_events_plugin_create_admin_page'),
-			// function
-			'dashicons-admin-generic',
-			// icon_url
+			'DCA Events Plugin', // page_title
+			'DCA Events Plugin', // menu_title
+			'manage_options', // capability
+			'dca-events-plugin', // menu_slug
+			array($this, 'dca_events_plugin_create_admin_page'), // function
+			'dashicons-admin-generic', // icon_url
 			75 // position
 		);
 	}
@@ -207,32 +197,23 @@ class DCAEventsPlugin
 	public function dca_events_plugin_page_init()
 	{
 		register_setting(
-			'dca_events_plugin_option_group',
-			// option_group
-			'dca_events_plugin_option_name',
-			// option_name
+			'dca_events_plugin_option_group', // option_group
+			'dca_events_plugin_option_name', // option_name
 			array($this, 'dca_events_plugin_sanitize') // sanitize_callback
 		);
 
 		add_settings_section(
-			'dca_events_plugin_setting_section',
-			// id
-			'Settings',
-			// title
-			array($this, 'dca_events_plugin_section_info'),
-			// callback
+			'dca_events_plugin_setting_section', // id
+			'Settings', // title
+			array($this, 'dca_events_plugin_section_info'), // callback
 			'dca-events-plugin-admin' // page
 		);
 
 		add_settings_field(
-			'venue_id_0',
-			// id
-			'Venue ID',
-			// title
-			array($this, 'venue_id_0_callback'),
-			// callback
-			'dca-events-plugin-admin',
-			// page
+			'venue_id_0', // id
+			'Venue ID', // title
+			array($this, 'venue_id_0_callback'), // callback
+			'dca-events-plugin-admin', // page
 			'dca_events_plugin_setting_section' // section
 		);
 	}
@@ -255,74 +236,74 @@ class DCAEventsPlugin
 	public function venue_id_0_callback()
 	{
 		?> <select name="dca_events_plugin_option_name[venue_id_0]" id="venue_id_0">
-			<?php $selected = (isset($this->dca_events_plugin_options['venue_id_0']) && $this->dca_events_plugin_options['venue_id_0'] === 'option-93') ? 'selected' : ''; ?>
-			<option value="option-93" <?php echo $selected; ?>> 93 No name</option>
-			<?php $selected = (isset($this->dca_events_plugin_options['venue_id_0']) && $this->dca_events_plugin_options['venue_id_0'] === 'option-94') ? 'selected' : ''; ?>
-			<option value="option-94" <?php echo $selected; ?>> 94 Bosque Redondo Memorial at Fort Sumner Historic Site</option>
-			<?php $selected = (isset($this->dca_events_plugin_options['venue_id_0']) && $this->dca_events_plugin_options['venue_id_0'] === 'option-95') ? 'selected' : ''; ?>
-			<option value="option-95" <?php echo $selected; ?>> 95 No name</option>
-			<?php $selected = (isset($this->dca_events_plugin_options['venue_id_0']) && $this->dca_events_plugin_options['venue_id_0'] === 'option-96') ? 'selected' : ''; ?>
-			<option value="option-96" <?php echo $selected; ?>> 96 Coronado Historic Site</option>
-			<?php $selected = (isset($this->dca_events_plugin_options['venue_id_0']) && $this->dca_events_plugin_options['venue_id_0'] === 'option-97') ? 'selected' : ''; ?>
-			<option value="option-97" <?php echo $selected; ?>> 97 El Camino Real Historic Site</option>
-			<?php $selected = (isset($this->dca_events_plugin_options['venue_id_0']) && $this->dca_events_plugin_options['venue_id_0'] === 'option-98') ? 'selected' : ''; ?>
-			<option value="option-98" <?php echo $selected; ?>> 98 No name</option>
-			<?php $selected = (isset($this->dca_events_plugin_options['venue_id_0']) && $this->dca_events_plugin_options['venue_id_0'] === 'option-99') ? 'selected' : ''; ?>
-			<option value="option-99" <?php echo $selected; ?>> 99 Fort Selden</option>
-			<?php $selected = (isset($this->dca_events_plugin_options['venue_id_0']) && $this->dca_events_plugin_options['venue_id_0'] === 'option-100') ? 'selected' : ''; ?>
-			<option value="option-100" <?php echo $selected; ?>> 100 Fort Stanton Historic Site</option>
-			<?php $selected = (isset($this->dca_events_plugin_options['venue_id_0']) && $this->dca_events_plugin_options['venue_id_0'] === 'option-101') ? 'selected' : ''; ?>
-			<option value="option-101" <?php echo $selected; ?>> 101 No name</option>
-			<?php $selected = (isset($this->dca_events_plugin_options['venue_id_0']) && $this->dca_events_plugin_options['venue_id_0'] === 'option-102') ? 'selected' : ''; ?>
-			<option value="option-102" <?php echo $selected; ?>> 102 No name</option>
-			<?php $selected = (isset($this->dca_events_plugin_options['venue_id_0']) && $this->dca_events_plugin_options['venue_id_0'] === 'option-103') ? 'selected' : ''; ?>
-			<option value="option-103" <?php echo $selected; ?>> 103 Jemez Historic Site</option>
-			<?php $selected = (isset($this->dca_events_plugin_options['venue_id_0']) && $this->dca_events_plugin_options['venue_id_0'] === 'option-104') ? 'selected' : ''; ?>
-			<option value="option-104" <?php echo $selected; ?>> 104 Lincoln Historic Site</option>
-			<?php $selected = (isset($this->dca_events_plugin_options['venue_id_0']) && $this->dca_events_plugin_options['venue_id_0'] === 'option-105') ? 'selected' : ''; ?>
-			<option value="option-105" <?php echo $selected; ?>> 105 Los Luceros Historic Site</option>
-			<?php $selected = (isset($this->dca_events_plugin_options['venue_id_0']) && $this->dca_events_plugin_options['venue_id_0'] === 'option-106') ? 'selected' : ''; ?>
-			<option value="option-106" <?php echo $selected; ?>> 106 No name</option>
-			<?php $selected = (isset($this->dca_events_plugin_options['venue_id_0']) && $this->dca_events_plugin_options['venue_id_0'] === 'option-107') ? 'selected' : ''; ?>
-			<option value="option-107" <?php echo $selected; ?>> 107 Museum Hill Partners</option>
-			<?php $selected = (isset($this->dca_events_plugin_options['venue_id_0']) && $this->dca_events_plugin_options['venue_id_0'] === 'option-108') ? 'selected' : ''; ?>
-			<option value="option-108" <?php echo $selected; ?>> 108 Museum of Indian Arts & Culture</option>
-			<?php $selected = (isset($this->dca_events_plugin_options['venue_id_0']) && $this->dca_events_plugin_options['venue_id_0'] === 'option-109') ? 'selected' : ''; ?>
-			<option value="option-109" <?php echo $selected; ?>> 109 Museum of International Folk Art</option>
-			<?php $selected = (isset($this->dca_events_plugin_options['venue_id_0']) && $this->dca_events_plugin_options['venue_id_0'] === 'option-110') ? 'selected' : ''; ?>
-			<option value="option-110" <?php echo $selected; ?>> 110 Museum fo New Mexico</option>
-			<?php $selected = (isset($this->dca_events_plugin_options['venue_id_0']) && $this->dca_events_plugin_options['venue_id_0'] === 'option-111') ? 'selected' : ''; ?>
-			<option value="option-111" <?php echo $selected; ?>> 111 Museum of New Mexico Foundation</option>
-			<?php $selected = (isset($this->dca_events_plugin_options['venue_id_0']) && $this->dca_events_plugin_options['venue_id_0'] === 'option-112') ? 'selected' : ''; ?>
-			<option value="option-112" <?php echo $selected; ?>> 112 Museum Resources</option>
-			<?php $selected = (isset($this->dca_events_plugin_options['venue_id_0']) && $this->dca_events_plugin_options['venue_id_0'] === 'option-113') ? 'selected' : ''; ?>
-			<option value="option-113" <?php echo $selected; ?>> 113 National Hispanic Cultural Center</option>
-			<?php $selected = (isset($this->dca_events_plugin_options['venue_id_0']) && $this->dca_events_plugin_options['venue_id_0'] === 'option-114') ? 'selected' : ''; ?>
-			<option value="option-114" <?php echo $selected; ?>> 114 New Mexico Arts</option>
-			<?php $selected = (isset($this->dca_events_plugin_options['venue_id_0']) && $this->dca_events_plugin_options['venue_id_0'] === 'option-115') ? 'selected' : ''; ?>
-			<option value="option-115" <?php echo $selected; ?>> 115 No name</option>
-			<?php $selected = (isset($this->dca_events_plugin_options['venue_id_0']) && $this->dca_events_plugin_options['venue_id_0'] === 'option-116') ? 'selected' : ''; ?>
-			<option value="option-116" <?php echo $selected; ?>> 116 New Mexico Department of Cultural Affairs</option>
-			<?php $selected = (isset($this->dca_events_plugin_options['venue_id_0']) && $this->dca_events_plugin_options['venue_id_0'] === 'option-117') ? 'selected' : ''; ?>
-			<option value="option-117" <?php echo $selected; ?>> 117 New Mexico Farm and Ranch Heritage Museum</option>
-			<?php $selected = (isset($this->dca_events_plugin_options['venue_id_0']) && $this->dca_events_plugin_options['venue_id_0'] === 'option-118') ? 'selected' : ''; ?>
-			<option value="option-118" <?php echo $selected; ?>> 118 New Mexico Historic Sites</option>
-			<?php $selected = (isset($this->dca_events_plugin_options['venue_id_0']) && $this->dca_events_plugin_options['venue_id_0'] === 'option-119') ? 'selected' : ''; ?>
-			<option value="option-119" <?php echo $selected; ?>> 119 New Mexico History Museum</option>
-			<?php $selected = (isset($this->dca_events_plugin_options['venue_id_0']) && $this->dca_events_plugin_options['venue_id_0'] === 'option-120') ? 'selected' : ''; ?>
-			<option value="option-120" <?php echo $selected; ?>> 120 New Mexico Museum of Art</option>
-			<?php $selected = (isset($this->dca_events_plugin_options['venue_id_0']) && $this->dca_events_plugin_options['venue_id_0'] === 'option-121') ? 'selected' : ''; ?>
-			<option value="option-121" <?php echo $selected; ?>> 121 No name</option>
-			<?php $selected = (isset($this->dca_events_plugin_options['venue_id_0']) && $this->dca_events_plugin_options['venue_id_0'] === 'option-122') ? 'selected' : ''; ?>
-			<option value="option-122" <?php echo $selected; ?>> 122 No name</option>
-			<?php $selected = (isset($this->dca_events_plugin_options['venue_id_0']) && $this->dca_events_plugin_options['venue_id_0'] === 'option-123') ? 'selected' : ''; ?>
-			<option value="option-123" <?php echo $selected; ?>> 123 New Mexico Museum of Space History</option>
-			<?php $selected = (isset($this->dca_events_plugin_options['venue_id_0']) && $this->dca_events_plugin_options['venue_id_0'] === 'option-124') ? 'selected' : ''; ?>
-			<option value="option-124" <?php echo $selected; ?>> 124 New Mexico State Library</option>
-			<?php $selected = (isset($this->dca_events_plugin_options['venue_id_0']) && $this->dca_events_plugin_options['venue_id_0'] === 'option-125') ? 'selected' : ''; ?>
-			<option value="option-125" <?php echo $selected; ?>> 125 Office of Archaeological Studies</option>
-			<?php $selected = (isset($this->dca_events_plugin_options['venue_id_0']) && $this->dca_events_plugin_options['venue_id_0'] === 'option-126') ? 'selected' : ''; ?>
-			<option value="option-126" <?php echo $selected; ?>> 126 Taylor Mesilla Historic Site</option>
+			<?php $selected = (isset($this->dca_events_plugin_options['venue_id_0']) && $this->dca_events_plugin_options['venue_id_0'] === '93') ? 'selected' : ''; ?>
+			<option value="93" <?php echo $selected; ?>> 93 No name</option>
+			<?php $selected = (isset($this->dca_events_plugin_options['venue_id_0']) && $this->dca_events_plugin_options['venue_id_0'] === '94') ? 'selected' : ''; ?>
+			<option value="94" <?php echo $selected; ?>> 94 Bosque Redondo Memorial at Fort Sumner Historic Site</option>
+			<?php $selected = (isset($this->dca_events_plugin_options['venue_id_0']) && $this->dca_events_plugin_options['venue_id_0'] === '95') ? 'selected' : ''; ?>
+			<option value="95" <?php echo $selected; ?>> 95 No name</option>
+			<?php $selected = (isset($this->dca_events_plugin_options['venue_id_0']) && $this->dca_events_plugin_options['venue_id_0'] === '96') ? 'selected' : ''; ?>
+			<option value="96" <?php echo $selected; ?>> 96 Coronado Historic Site</option>
+			<?php $selected = (isset($this->dca_events_plugin_options['venue_id_0']) && $this->dca_events_plugin_options['venue_id_0'] === '97') ? 'selected' : ''; ?>
+			<option value="97" <?php echo $selected; ?>> 97 El Camino Real Historic Site</option>
+			<?php $selected = (isset($this->dca_events_plugin_options['venue_id_0']) && $this->dca_events_plugin_options['venue_id_0'] === '98') ? 'selected' : ''; ?>
+			<option value="98" <?php echo $selected; ?>> 98 No name</option>
+			<?php $selected = (isset($this->dca_events_plugin_options['venue_id_0']) && $this->dca_events_plugin_options['venue_id_0'] === '99') ? 'selected' : ''; ?>
+			<option value="99" <?php echo $selected; ?>> 99 Fort Selden</option>
+			<?php $selected = (isset($this->dca_events_plugin_options['venue_id_0']) && $this->dca_events_plugin_options['venue_id_0'] === '100') ? 'selected' : ''; ?>
+			<option value="100" <?php echo $selected; ?>> 100 Fort Stanton Historic Site</option>
+			<?php $selected = (isset($this->dca_events_plugin_options['venue_id_0']) && $this->dca_events_plugin_options['venue_id_0'] === '101') ? 'selected' : ''; ?>
+			<option value="101" <?php echo $selected; ?>> 101 No name</option>
+			<?php $selected = (isset($this->dca_events_plugin_options['venue_id_0']) && $this->dca_events_plugin_options['venue_id_0'] === '102') ? 'selected' : ''; ?>
+			<option value="102" <?php echo $selected; ?>> 102 No name</option>
+			<?php $selected = (isset($this->dca_events_plugin_options['venue_id_0']) && $this->dca_events_plugin_options['venue_id_0'] === '103') ? 'selected' : ''; ?>
+			<option value="103" <?php echo $selected; ?>> 103 Jemez Historic Site</option>
+			<?php $selected = (isset($this->dca_events_plugin_options['venue_id_0']) && $this->dca_events_plugin_options['venue_id_0'] === '104') ? 'selected' : ''; ?>
+			<option value="104" <?php echo $selected; ?>> 104 Lincoln Historic Site</option>
+			<?php $selected = (isset($this->dca_events_plugin_options['venue_id_0']) && $this->dca_events_plugin_options['venue_id_0'] === '105') ? 'selected' : ''; ?>
+			<option value="105" <?php echo $selected; ?>> 105 Los Luceros Historic Site</option>
+			<?php $selected = (isset($this->dca_events_plugin_options['venue_id_0']) && $this->dca_events_plugin_options['venue_id_0'] === '106') ? 'selected' : ''; ?>
+			<option value="106" <?php echo $selected; ?>> 106 No name</option>
+			<?php $selected = (isset($this->dca_events_plugin_options['venue_id_0']) && $this->dca_events_plugin_options['venue_id_0'] === '107') ? 'selected' : ''; ?>
+			<option value="107" <?php echo $selected; ?>> 107 Museum Hill Partners</option>
+			<?php $selected = (isset($this->dca_events_plugin_options['venue_id_0']) && $this->dca_events_plugin_options['venue_id_0'] === '108') ? 'selected' : ''; ?>
+			<option value="108" <?php echo $selected; ?>> 108 Museum of Indian Arts & Culture</option>
+			<?php $selected = (isset($this->dca_events_plugin_options['venue_id_0']) && $this->dca_events_plugin_options['venue_id_0'] === '109') ? 'selected' : ''; ?>
+			<option value="109" <?php echo $selected; ?>> 109 Museum of International Folk Art</option>
+			<?php $selected = (isset($this->dca_events_plugin_options['venue_id_0']) && $this->dca_events_plugin_options['venue_id_0'] === '110') ? 'selected' : ''; ?>
+			<option value="110" <?php echo $selected; ?>> 110 Museum fo New Mexico</option>
+			<?php $selected = (isset($this->dca_events_plugin_options['venue_id_0']) && $this->dca_events_plugin_options['venue_id_0'] === '111') ? 'selected' : ''; ?>
+			<option value="111" <?php echo $selected; ?>> 111 Museum of New Mexico Foundation</option>
+			<?php $selected = (isset($this->dca_events_plugin_options['venue_id_0']) && $this->dca_events_plugin_options['venue_id_0'] === '112') ? 'selected' : ''; ?>
+			<option value="112" <?php echo $selected; ?>> 112 Museum Resources</option>
+			<?php $selected = (isset($this->dca_events_plugin_options['venue_id_0']) && $this->dca_events_plugin_options['venue_id_0'] === '113') ? 'selected' : ''; ?>
+			<option value="113" <?php echo $selected; ?>> 113 National Hispanic Cultural Center</option>
+			<?php $selected = (isset($this->dca_events_plugin_options['venue_id_0']) && $this->dca_events_plugin_options['venue_id_0'] === '114') ? 'selected' : ''; ?>
+			<option value="114" <?php echo $selected; ?>> 114 New Mexico Arts</option>
+			<?php $selected = (isset($this->dca_events_plugin_options['venue_id_0']) && $this->dca_events_plugin_options['venue_id_0'] === '115') ? 'selected' : ''; ?>
+			<option value="115" <?php echo $selected; ?>> 115 No name</option>
+			<?php $selected = (isset($this->dca_events_plugin_options['venue_id_0']) && $this->dca_events_plugin_options['venue_id_0'] === '116') ? 'selected' : ''; ?>
+			<option value="116" <?php echo $selected; ?>> 116 New Mexico Department of Cultural Affairs</option>
+			<?php $selected = (isset($this->dca_events_plugin_options['venue_id_0']) && $this->dca_events_plugin_options['venue_id_0'] === '117') ? 'selected' : ''; ?>
+			<option value="117" <?php echo $selected; ?>> 117 New Mexico Farm and Ranch Heritage Museum</option>
+			<?php $selected = (isset($this->dca_events_plugin_options['venue_id_0']) && $this->dca_events_plugin_options['venue_id_0'] === '118') ? 'selected' : ''; ?>
+			<option value="118" <?php echo $selected; ?>> 118 New Mexico Historic Sites</option>
+			<?php $selected = (isset($this->dca_events_plugin_options['venue_id_0']) && $this->dca_events_plugin_options['venue_id_0'] === '119') ? 'selected' : ''; ?>
+			<option value="119" <?php echo $selected; ?>> 119 New Mexico History Museum</option>
+			<?php $selected = (isset($this->dca_events_plugin_options['venue_id_0']) && $this->dca_events_plugin_options['venue_id_0'] === '120') ? 'selected' : ''; ?>
+			<option value="120" <?php echo $selected; ?>> 120 New Mexico Museum of Art</option>
+			<?php $selected = (isset($this->dca_events_plugin_options['venue_id_0']) && $this->dca_events_plugin_options['venue_id_0'] === '121') ? 'selected' : ''; ?>
+			<option value="121" <?php echo $selected; ?>> 121 No name</option>
+			<?php $selected = (isset($this->dca_events_plugin_options['venue_id_0']) && $this->dca_events_plugin_options['venue_id_0'] === '122') ? 'selected' : ''; ?>
+			<option value="122" <?php echo $selected; ?>> 122 No name</option>
+			<?php $selected = (isset($this->dca_events_plugin_options['venue_id_0']) && $this->dca_events_plugin_options['venue_id_0'] === '123') ? 'selected' : ''; ?>
+			<option value="123" <?php echo $selected; ?>> 123 New Mexico Museum of Space History</option>
+			<?php $selected = (isset($this->dca_events_plugin_options['venue_id_0']) && $this->dca_events_plugin_options['venue_id_0'] === '124') ? 'selected' : ''; ?>
+			<option value="124" <?php echo $selected; ?>> 124 New Mexico State Library</option>
+			<?php $selected = (isset($this->dca_events_plugin_options['venue_id_0']) && $this->dca_events_plugin_options['venue_id_0'] === '125') ? 'selected' : ''; ?>
+			<option value="125" <?php echo $selected; ?>> 125 Office of Archaeological Studies</option>
+			<?php $selected = (isset($this->dca_events_plugin_options['venue_id_0']) && $this->dca_events_plugin_options['venue_id_0'] === '126') ? 'selected' : ''; ?>
+			<option value="126" <?php echo $selected; ?>> 126 Taylor Mesilla Historic Site</option>
 		</select> <?php
 	}
 
