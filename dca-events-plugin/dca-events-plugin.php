@@ -75,7 +75,7 @@ function dca_events_plugin($atts = [])
 	$_API_URL = "http://nmdcamediadev.wpengine.com/wp-json/tribe/events/v1/events/?";
 
 	//set limit in api url
-	$_API_URL .= "page=" . $_LIMIT_OPT;
+	$_API_URL .= "per_page=" . $_LIMIT_OPT;
 
 	//set dates in based on options
 	if ($_CURR_DAY_OPT == true) {
@@ -126,8 +126,7 @@ function dca_events_plugin($atts = [])
 
 	if ($event_data == null) {
 		echo json_last_error() . "<br>";
-  		echo $event_data; 
-
+		
 	} else {
 
 		// return results (html output)
