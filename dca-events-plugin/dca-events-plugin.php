@@ -29,8 +29,13 @@ function dca_events_plugin($atts = [])
 	//gets shortcode vals
 	$atts = shortcode_atts(
 		array(
+<<<<<<< HEAD
 			'site' => NULL, //site id for museum
 			'today' => false, //events by current day
+=======
+			'id' => NULL, //site id for museum
+			'current-day' => false, //events by current day
+>>>>>>> f3f6928550b385825c67caa2843a11f9c1a76711
 			'current-month' => false, //events by current month
 			'date-range' => false, //events by range
 			'range-start' => NULL, //start range
@@ -60,9 +65,14 @@ function dca_events_plugin($atts = [])
 	// set default limit if null - else typecast shortcode val
 	$_LIMIT_OPT = ($atts['limit'] == NULL) ? 10 : intval($atts['limit']);
 
+<<<<<<< HEAD
 	//get events from site option else get default in settings menu
 	$_SITE_ID = ($atts['site'] == NULL) ? intval($atts['site']) :  get_option('dca_events_plugin_option_name')['venue_id_0'] ;
 	
+=======
+	//get events from set default in settings menu
+	$_SITE_ID = get_option('dca_events_plugin_option_name')['venue_id_0'];
+>>>>>>> f3f6928550b385825c67caa2843a11f9c1a76711
 	// TODO: should I set a default for all events in the dropdown?
 	//       if so how do I do that its just with no ?venues in the api right?
 
@@ -74,7 +84,7 @@ function dca_events_plugin($atts = [])
 	$_API_URL = "http://nmdcamediadev.wpengine.com/wp-json/tribe/events/v1/events/?";
 
 	//set limit in api url
-	$_API_URL .= "per_page=" . $_LIMIT_OPT;
+	$_API_URL .= "page=" . $_LIMIT_OPT;
 
 	//set dates in based on options
 	if ($_CURR_DAY_OPT == true) {
@@ -112,11 +122,15 @@ function dca_events_plugin($atts = [])
 
 	//set venue in api url
 	$_API_URL .= "&venues=" . $_SITE_ID;
+<<<<<<< HEAD
 	
+=======
+>>>>>>> f3f6928550b385825c67caa2843a11f9c1a76711
 
 	//make API request
 	$json_data = file_get_contents($_API_URL);
 	$response_data = json_decode($json_data);
+<<<<<<< HEAD
 	$event_data = $response_data->events;
 	
 	
@@ -125,12 +139,23 @@ function dca_events_plugin($atts = [])
 
 	if ($event_data == null) {
 		echo json_last_error() . "<br>";
+=======
+	$event_data = $response_data;
+	echo ("<script>console.log('PHP: " . $_API_URL . "');</script>");
+
+	if ($event_data == null) {
+		echo json_last_error() . "<br>";
+  		echo $event_data; 
+>>>>>>> f3f6928550b385825c67caa2843a11f9c1a76711
 
 	} else {
 
 		// return results (html output)
 		foreach ($event_data as $events) {
+<<<<<<< HEAD
 			
+=======
+>>>>>>> f3f6928550b385825c67caa2843a11f9c1a76711
 			$output .= '<div class="dca-event">';
 			// title, description, event dates, venue name, address
 			$output .= "<h5>" . "Title: " . $events->title . "</h5>" . "<br> ";
