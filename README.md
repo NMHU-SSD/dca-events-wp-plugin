@@ -35,7 +35,8 @@ Some parameters:
 - venue
 
 Query example:
-''' http://nmdcamediadev.wpengine.com//wp-json/tribe/events/v1/events/?per_page=25&start_date=2023-06-26&end_date=023-06-29&venue=108
+'''
+http://nmdcamediadev.wpengine.com//wp-json/tribe/events/v1/events/?per_page=25&start_date=2023-06-26&end_date=023-06-29&venue=108
 '''
 
 API doc:
