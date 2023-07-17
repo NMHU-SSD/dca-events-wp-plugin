@@ -46,4 +46,5 @@ WPDocs:
 
 ## Internship
 Client: New Mexico Department of Cultural Affairs
+
 Student Intern: [Anita Martin](https://github.com/anita-martin5703/)
