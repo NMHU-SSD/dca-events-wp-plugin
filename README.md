@@ -29,10 +29,10 @@ Endpoint:
 - https://nmdcamediadev.wpengine.com/wp-json/tribe/events/v1/events/
 
 Some parameters:
-- per_page
-- start_date
-- end_date
-- venue
+- per_page limits the results
+- start_date sets the start date range
+- end_date sets the end date range
+- venue sets the site id
 
 Query example:
 - http://nmdcamediadev.wpengine.com//wp-json/tribe/events/v1/events/?per_page=25&start_date=2023-06-26&end_date=023-06-29&venue=108
