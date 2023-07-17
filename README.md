@@ -29,7 +29,7 @@ Endpoint:
 - https://nmdcamediadev.wpengine.com/wp-json/tribe/events/v1/events/
 
 Some parameters:
-- page
+- per_page
 - start_date
 - end_date
 - venue
