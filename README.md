@@ -8,8 +8,8 @@ shortcode options:
 - today = set true to show events for today
 - current-month = set true to show events for this month
 - date-range = set true to show events for range of dates
-- range-start = set start date in mm-dd-yyyy format
-- range-end = set end date in mm-dd-yyyy format
+- range-start = set start date in yyyy-mm-dd format
+- range-end = set end date in yyyy-mm-dd format
 
 
 ## Installation
