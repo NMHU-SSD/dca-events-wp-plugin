@@ -21,7 +21,7 @@ This section describes how to install the plugin and get it working. e.g.
 3. Activate the plugin through the 'Plugins' menu in WordPress
 
 
-### NM DCA Media Center API 
+## NM DCA Media Center API 
 
 The NMDCA Media Center is a wordpress website and REST API for events and exhibitions for all NMDCA Cultural and Historic Sites. 
 
