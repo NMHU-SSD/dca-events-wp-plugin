@@ -15,9 +15,42 @@
 
 /*
  *
+ *	Helper functions
+ *
+ */
+
+// formats date in shortcode
+function formatShortcodeDate($date)
+{
+	return DateTime::createFromFormat('Y-m-d', $date)->format('Y-m-d');
+}
+
+// formats event date in output 
+function formatEventDate($date)
+{
+	return date("F d, Y", strtotime($date)); 
+}
+
+//formats event time in output 
+function formatEventTime($date)
+{
+	return date("h:i A", strtotime($date)); 
+}
+
+
+// helper function api request
+function api_request($url)
+{
+	$response = file_get_contents($url);
+	return json_decode($response);
+}
+
+/*
+ *
  *	Plugin Shortcode function
  *
  */
+
 
 function dca_events_plugin($atts = [])
 {
@@ -27,8 +60,8 @@ function dca_events_plugin($atts = [])
 	//gets shortcode vals
 	$atts = shortcode_atts(
 		array(
-			'id' => NULL, //site id for museum
-			'current-day' => false, //events by current day
+			'site' => NULL, //site id for museum
+			'today' => false, //events by current day
 			'current-month' => false, //events by current month
 			'date-range' => false, //events by range
 			'range-start' => NULL, //start range
@@ -38,27 +71,21 @@ function dca_events_plugin($atts = [])
 		$atts
 	);
 
-	// helper functions for dca_events shortcode
-	function reformatDate($date)
-	{
-		return DateTime::createFromFormat('m-d-Y', $date)->format('Y-m-d');
-	}
-
 	// check options and validate - not valid will result in NULL
-	$_CURR_DAY_OPT = filter_var($atts['current-day'], FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
+	$_CURR_DAY_OPT = filter_var($atts['today'], FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
 	$_CURR_MONTH_OPT = filter_var($atts['current-month'], FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
 	$_DATE_RANGE_OPT = filter_var($atts['date-range'], FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
 
 	//set correct timezone and set/format range dates
 	date_default_timezone_set('America/Denver');
-	$_DATE_RANGE_START = ($atts['range-start'] == NULL) ? date("Y-m-d") : reformatDate($atts['range-start']);
-	$_DATE_RANGE_END = ($atts['range-end'] == NULL) ? date("Y-m-d") : reformatDate($atts['range-end']);
+	$_DATE_RANGE_START = ($atts['range-start'] == NULL) ? date("Y-m-d") : formatShortcodeDate($atts['range-start']);
+	$_DATE_RANGE_END = ($atts['range-end'] == NULL) ? date("Y-m-d") : formatShortcodeDate($atts['range-end']);
 
 	// set default limit if null - else typecast shortcode val
 	$_LIMIT_OPT = ($atts['limit'] == NULL) ? 10 : intval($atts['limit']);
 
-	//get events from set default in settings menu
-	$_SITE_ID = get_option('dca_events_plugin_option_name')['venue_id_0'];
+	//get events from site option else get default in settings menu
+	$_SITE_ID = ($atts['site'] != NULL) ? intval($atts['site']) : get_option('dca_events_plugin_option_name')['venue_id_0'];
 
 	//get api results
 	//docs: https://developer.wordpress.org/rest-api/using-the-rest-api/
@@ -114,44 +141,67 @@ function dca_events_plugin($atts = [])
 	$_API_URL .= "&venue=" . $_SITE_ID;
 
 	//make API request
-	$json_data = file_get_contents($_API_URL);
-	$response_data = json_decode($json_data);
+	$response_data =  api_request($_API_URL);	
+	
 	$output = "<script>console.log('PHP: " . $_API_URL . "');</script>";
-
+	$output .= '<div class="container-fluid p-0 mx-auto">';
+	
 	if ($response_data == null || $response_data->events == []) {
-		$output .= '<div class="display-error">';
 		$output .= "<script>console.log('Error: " . json_last_error() . "');</script>";
-		$output .= "<h3>" . "Sorry no events to display please try again." . "</h3>" . "<br>";
-		$output .= '</div>';
+		$output .= "<h3 class='text-error'>" . "Sorry, no events to display. Please try again." . "</h3>" . "<br>";
 
 	} else {
 		// return results (html output)
-		$output .= "<div class='container-fluid'>";
+
 		foreach ($response_data->events as $event) {
 
-			$output .= "<div class='row p-0 mt-d mb-5'>";
+			$output .= "<div class='row p-0 ms-0 ml-0 mt-5 mb-5'>";
 
-			$output .= "<div class='col-12 col-md-6 p-0' style='min-height: 400px; '>";
-			$output .= "<img src='".$event->image->url."' class='img-fluid object-fit-cover'>";
+			$output .= "<div class='col-12 col-md-6 p-0'>";
+			$output .= "<img src='".$event->image->url."'  style='min-height: 200px; height: 100%; width: 100%; object-fit: cover;'   >";
 			$output .= "</div>";
-			
+
 			$output .= "<div class='col-12 col-md-6'>";
 			$output .= "<span class='lead text-warning'>".$event->venue->venue ."</span>";
-			$output .= "<h3 class='text-secondary'>".$event->title."</h3>";			
+			$output .= "<h3 class='text-secondary'>".$event->title."</h3>";
+			
+			//create a url to template page to get rest of details
+			$output .= "<a href='/events/". $event->id . "'><button class='mt-4 btn btn-seconday'>More details</button></a>";
+			$output .= "</div>";
+
+
+
+			//details to pull in template page (showing for now)
+			
+			$output .= "<div class='col-12 mt-3'>";
+			
 			$output .= "<p>".$event->description ."</p>";
-			$output .= "<p>". "When: " .$event->start_date."</p>";
-			$output .= "<p>". "Where: " .$event->venue->address."</p>";
-			$output .= "<a href='".$event->url."'><button class='btn btn-seconday'>More details</button></a>";
-			$output .= '</div>';
+			
+			$output .= "<p class='mt-3'><b>Address: </b>". $event->venue->address."</p>";
+			$d = formatEventDate($event->start_date);
+			$t = formatEventTime($event->start_date);
+			$output .= "<p><b>Date: </b>". $d ."</p>";
+			$output .= "<p><b>Time: </b>". $t ."</p>";
+			
+			//todo check if null - set $0 else show cost
+			$output .= "<p><b>Cost: </b>".  $event->cost . " </p>";
+			
+			$output .= "</div>";
+
 
 			$output .= '</div>';
 		}
-		$output .= '</div>';
+		
 	}
+	
+	$output .= '</div>';
+	
+	
 	// return output
 	return $output;
 
 }
+
 
 //register shortcode
 add_shortcode('dca_events', 'dca_events_plugin');
@@ -168,6 +218,7 @@ function addBootStrap() {
 	wp_enqueue_style("bootstrapCSS", "https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css");
 	wp_enqueue_script("bootstrapJS", "https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.min.js");
 }
+
 add_action("wp_enqueue_scripts", "addBootStrap");
 
 /*
@@ -203,6 +254,7 @@ class DCAEventsPlugin
 	{
 		// TODO: Add in instuctions on how to use plug-in, format, examples, etc
 		$this->dca_events_plugin_options = get_option('dca_events_plugin_option_name'); ?>
+		
 
 										<div class="wrap">
 											<h2>DCA Events Plugin</h2>
@@ -260,16 +312,22 @@ class DCAEventsPlugin
 
 	public function venue_id_0_callback()
 	{
-		$request = file_get_contents("https://nmdcamediadev.wpengine.com/wp-json/tribe/events/v1/venues");
-		$response = json_decode($request);
-
-		// TODO: set a default for all events in the dropdown??
-
-		?> <select name="dca_events_plugin_option_name[venue_id_0]" id="venue_id_0"> ?>
-		<?php foreach ($response->venues as $venue) { ?>
-				<?php $selected = (isset($this->dca_events_plugin_options['venue_id_0']) &&
-					$this->dca_events_plugin_options['venue_id_0'] === $venue->id) ? 'selected' : ''; ?>
-				<option value="<?php echo $venue->id ?>" <?php echo $selected; ?>><?php echo $venue->id ." " .$venue->venue ?></option>
+		$url = "https://nmdcamediadev.wpengine.com/wp-json/tribe/events/v1/venues";
+		$response_data =  api_request($url);	
+		
+		?> 
+		<select name="dca_events_plugin_option_name[venue_id_0]" id="venue_id_0"> ?>
+		<?php foreach ($response_data->venues as $venue) { ?>
+			
+			
+			
+				<?php 
+				$selected = (isset($this->dca_events_plugin_options['venue_id_0']) &&
+					$this->dca_events_plugin_options['venue_id_0'] == $venue->id) ? 'selected' : ''; ?>
+				<option value="<?php echo $venue->id ?>" <?php echo $selected; ?> > 
+					<?php echo $venue->id ." ".$venue->venue ?>
+				</option>
+				
 		<?php } ?>
 			</select>
 		<?php
