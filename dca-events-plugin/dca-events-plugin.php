@@ -47,11 +47,108 @@ function api_request($url)
 
 /*
  *
- *	Plugin Shortcode function
+ *	Rewrite and Custom Template
  *
  */
 
+function reWriteEvent()
+{
+	/** @global WP_Rewrite $wp_rewrite */
+	global $wp_rewrite;
+	//'https://test-dca-mc.nmdca.net/wp-json/tribe/events/v1/events/" . $event->id 
 
+
+	$newRules = array(
+		'https://test-dca-mc.nmdca.net/wp-json/tribe/events/v1/?$' => '/events/?custom_page=event',
+		'events/(\d+)/?$' => sprintf(
+			'/events/?custom_page=event_id=%s',
+			$wp_rewrite->preg_index(1)
+		),
+	);
+
+	$wp_rewrite->rules = $newRules + (array) $wp_rewrite->rules;
+}
+
+add_action('generate_rewrite_rules', 'reWriteEvent');
+
+function themeRedirect($passed_event)
+{
+	$plugindir = dirname(__FILE__);
+	$prefix = 'myprefix';
+	$themeFilesDir = 'theme-files'; // Sub directory in your plugin to put all your template files
+
+	$page = get_query_var('custom_page');
+	$event_id = (int) get_query_var('event_id', 0);
+
+	if ($page == 'events' && empty($event_id)) {
+
+		$data = array(
+			// Data you can pass to the template
+			'' => array(
+				array('title' => 'title', 
+				'description' => 'description',
+				'address' => 'venue->address',
+				'start_date' => 'start_date',
+				'cost' => 'cost',
+			),
+			),
+			'action' => 'my_action'
+		);
+		$filename = 'archive-events.php'; // filename of template
+		$fullTemplatePath = TEMPLATEPATH . DIRECTORY_SEPARATOR . $prefix . DIRECTORY_SEPARATOR . $filename;
+		$returnTemplate = (file_exists($fullTemplatePath)) ? $fullTemplatePath : $plugindir . DIRECTORY_SEPARATOR . $themeFilesDir . DIRECTORY_SEPARATOR . $filename;
+		doMyThemeRedirect($returnTemplate, true, $data);
+		return;
+
+	} else {
+		$output .= "<h3 class='text-error'>" . "Sorry, no events to display. Please try again." . "</h3>" . "<br>";
+		return;
+	}
+}
+
+/*
+ *
+ * Process theme redirect
+ *
+ */
+function doMyThemeRedirect($path, $force = false, $data = array())
+{
+	global $post, $wp_query;
+
+	if (have_posts() || $force) {
+		if (!empty($data))
+			extract($data);
+		include($path);
+		die();
+	} else {
+		$wp_query->is_404 = true;
+	}
+}
+
+add_action('template_redirect', 'themeRedirec');
+
+/*
+ *
+ * Register custom query vars
+ *
+ */
+function myRegisterQueryVars($vars)
+{
+	$vars[] = 'custom_page';
+	$vars[] = 'event_id';
+	return $vars;
+}
+
+add_filter('query_vars', 'myRegisterQueryVars');
+
+
+
+
+/* 
+ *
+ *	Plugin Shortcode function
+ *
+ */
 function dca_events_plugin($atts = [])
 {
 	// normalize attribute keys, lowercase
@@ -98,7 +195,7 @@ function dca_events_plugin($atts = [])
 	//sample: http://nmdcamediadev.wpengine.com//wp-json/tribe/events/v1/events/?page=10&start_date=2023-06-26&end_date=2023-06-29&venue=108
 
 	//start api string
-	$_API_URL = "http://nmdcamediadev.wpengine.com/wp-json/tribe/events/v1/events/?";
+	$_API_URL = "https://test-dca-mc.nmdca.net/wp-json/tribe/events/v1/events/?";
 
 	//set limit in api url
 	$_API_URL .= "per_page=" . $_LIMIT_OPT;
@@ -152,7 +249,6 @@ function dca_events_plugin($atts = [])
 
 	} else {
 		// return results (html output)
-
 		foreach ($response_data->events as $event) {
 
 			$output .= "<div class='row p-0 ms-0 ml-0 mt-5 mb-5'>";
@@ -165,14 +261,13 @@ function dca_events_plugin($atts = [])
 			$output .= "<span class='lead text-warning'>" . $event->venue->venue . "</span>";
 			$output .= "<h3 class='text-secondary'>" . $event->title . "</h3>";
 
-			//create a url to template page to get rest of details
-			$output .= "<a href='/events/" . $event->id . "'><button class='mt-4 btn btn-seconday'>More details</button></a>";
+			//TODO: create a url to template page to get rest of details
+			// call themeRedirect($event->id)???
+			
+			$output .= "<a href='https://test-dca-mc.nmdca.net/wp-json/tribe/events/v1/events/" . $event->id . "'><button class='mt-4 btn btn-seconday'>More details</button></a>";
 			$output .= "</div>";
 
-
-
 			//details to pull in template page (showing for now)
-
 			$output .= "<div class='col-12 mt-3'>";
 
 			$output .= "<p>" . $event->description . "</p>";
@@ -183,16 +278,14 @@ function dca_events_plugin($atts = [])
 			$output .= "<p><b>Date: </b>" . $d . "</p>";
 			$output .= "<p><b>Time: </b>" . $t . "</p>";
 
-			//todo check if null - set $0 else show cost
-			// Need to verify this works after URL works again
-			if($event->cost == null) {
+			if ($event->cost == null) {
 				$output .= "<p><b>Cost: </b> $0.00 </p>";
-			}
-			else {
+			} else {
 				$output .= "<p><b>Cost: </b>" . $event->cost . " </p>";
 			}
 			$output .= "</div>";
 			$output .= '</div>';
+
 		}
 
 	}
@@ -351,21 +444,21 @@ class DCAEventsPlugin
 
 	public function venue_id_0_callback()
 	{
-		$url = "https://nmdcamediadev.wpengine.com/wp-json/tribe/events/v1/venues";
+		$url = "https://test-dca-mc.nmdca.net/wp-json/tribe/events/v1/venues";
 		$response_data = api_request($url);
 
 		?> 
 						<select name="dca_events_plugin_option_name[venue_id_0]" id="venue_id_0"> ?>
 						<?php foreach ($response_data->venues as $venue) { ?>
 				
-								<?php
-								$selected = (isset($this->dca_events_plugin_options['venue_id_0']) &&
-									$this->dca_events_plugin_options['venue_id_0'] == $venue->id) ? 'selected' : ''; ?>
-								<option value="<?php echo $venue->id ?>" <?php echo $selected; ?> > 
-									<?php echo $venue->id . " " . $venue->venue ?>
-								</option>
+											<?php
+											$selected = (isset($this->dca_events_plugin_options['venue_id_0']) &&
+												$this->dca_events_plugin_options['venue_id_0'] == $venue->id) ? 'selected' : ''; ?>
+											<option value="<?php echo $venue->id ?>" <?php echo $selected; ?> > 
+												<?php echo $venue->id . " " . $venue->venue ?>
+											</option>
 				
-				<?php } ?>
+						<?php } ?>
 							</select>
 						<?php
 	}
