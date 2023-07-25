@@ -9,7 +9,7 @@
  * Domain Path:     /languages
  * Version:         0.1.0
  *
- * @package         Dca_Events_Plugin
+ * @package         DCA_Events_Plugin
  */
 
 
@@ -44,99 +44,6 @@ function api_request($url)
 	$response = file_get_contents($url);
 	return json_decode($response);
 }
-
-/*
- *
- *	Rewrite and Custom Template
- *
- */
-
-function reWriteEvent($wp_rewrite)
-{
-	$newRules = array(
-		'https://test-dca-mc.nmdca.net/wp-json/tribe/events/v1/?$' => '/events/?custom_page=event',
-		'events/(\d+)/?$' => sprintf(
-			'/events/?custom_page=event_id=%s',
-			$wp_rewrite->preg_index(1)
-		),
-	);
-
-	$wp_rewrite->rules = $newRules + (array) $wp_rewrite->rules;
-}
-
-add_action('generate_rewrite_rules', 'reWriteEvent');
-
-function themeRedirect()
-{
-	$plugindir = dirname(__FILE__);
-	$prefix = 'myprefix';
-	$themeFilesDir = 'templates'; // Sub directory in your plugin to put all your template files
-
-	$page = get_query_var('custom_page');
-	$event_id = (int) get_query_var('event_id', 0);
-
-	if ($page == 'events' && empty($event_id)) {
-
-		$data = array(
-			// Data you can pass to the template
-			'' => array(
-				array('title' => 'title', 
-				'description' => 'description',
-				'address' => 'venue->address',
-				'start_date' => 'start_date',
-				'cost' => 'cost',
-			),
-			),
-			'action' => 'my_action'
-		);
-		$filename = 'dca-event.php'; // filename of template
-		$fullTemplatePath = TEMPLATEPATH . DIRECTORY_SEPARATOR . $prefix . DIRECTORY_SEPARATOR . $filename;
-		$returnTemplate = (file_exists($fullTemplatePath)) ? $fullTemplatePath : $plugindir . DIRECTORY_SEPARATOR . $themeFilesDir . DIRECTORY_SEPARATOR . $filename;
-		doMyThemeRedirect($returnTemplate, true, $data);
-		return;
-
-	} else {
-		$output .= "<h3 class='text-error'>" . "Sorry, no events to display. Please try again." . "</h3>" . "<br>";
-		return;
-	}
-}
-
-/*
- *
- * Process theme redirect
- *
- */
-function doMyThemeRedirect($path, $force = false, $data = array())
-{
-	global $post, $wp_query;
-
-	if (have_posts() || $force) {
-		if (!empty($data))
-			extract($data);
-		include($path);
-		die();
-	} else {
-		$wp_query->is_404 = true;
-	}
-}
-
-add_action('template_redirect', 'themeRedirect');
-
-/*
- *
- * Register custom query vars
- *
- */
-function myRegisterQueryVars($vars)
-{
-	$vars[] = 'custom_page';
-	$vars[] = 'event_id';
-	return $vars;
-}
-
-add_filter('query_vars', 'myRegisterQueryVars');
-
-
 
 
 /* 
@@ -256,12 +163,11 @@ function dca_events_plugin($atts = [])
 			$output .= "<span class='lead text-warning'>" . $event->venue->venue . "</span>";
 			$output .= "<h3 class='text-secondary'>" . $event->title . "</h3>";
 
-			//TODO: create a url to template page to get rest of details
-			$output .= "<a href='https://test-dca-mc.nmdca.net/wp-json/tribe/events/v1/events/" + $event->id . "'><button class='mt-4 btn btn-seconday'>More details</button></a>";
+			$url = site_url() . "/events/". $event->id;
+			$output .= "<a href='".$url."'><button class='mt-4 btn btn-seconday'>More details</button></a>";
 			$output .= "</div>";
 			
-			// Call Function?
-
+		
 
      		//details to pull in template page (showing for now)
 			$output .= "<div class='col-12 mt-3'>";
@@ -459,3 +365,118 @@ class DCAEventsPlugin
 }
 if (is_admin())
 	$dca_events_plugin = new DCAEventsPlugin();
+
+
+
+
+
+/*
+ *
+ *	URL Rewrite and Custom Template
+ *
+ */
+
+
+function customRewriteEvent()
+{
+	
+	/** @global WP_Rewrite $wp_rewrite */
+	global $wp_rewrite;
+	
+		
+	$newRules = array(
+		'events/?$' => 'index.php?custom_page=events',
+        'events/(\d+)/?$' => sprintf(
+            'index.php?custom_page=events&event_id=%s',
+            $wp_rewrite->preg_index(1)
+        ),
+	);
+
+	$wp_rewrite->rules = $newRules + (array) $wp_rewrite->rules;
+}
+
+add_action('generate_rewrite_rules', 'customRewriteEvent');
+
+function customThemeRedirect()
+{
+	$plugindir = dirname(__FILE__);
+	$prefix = 'dca-events-plugin';
+	$themeFilesDir = 'templates'; // Sub directory in your plugin to put all your template files
+	
+	$page = get_query_var('custom_page');
+	$event_id = (int) get_query_var('event_id', 0);
+
+	//if id is empty you should show all events (what the shortcode outputs)
+	if ($page == 'events' && empty($event_id)) {
+
+		//use shortcode function:
+		$data = dca_events_plugin();
+		
+		$filename = 'events.php'; // filename of template
+		$fullTemplatePath = TEMPLATEPATH . DIRECTORY_SEPARATOR . $prefix . DIRECTORY_SEPARATOR . $filename;
+		$returnTemplate = (file_exists($fullTemplatePath)) ? $fullTemplatePath : $plugindir . DIRECTORY_SEPARATOR . $themeFilesDir . DIRECTORY_SEPARATOR . $filename;
+		
+		doCustomThemeRedirect($returnTemplate, true, $data);
+		return;
+
+	} 
+	elseif ($page == 'events' && !empty($event_id)) 
+	{
+		
+		///TODO - actually query the single event using API and send as data to template
+		
+		$data = array(
+			// Data you can pass to the template
+			'event' => array(
+				'title' => 'title', 
+				'description' => 'description',
+				'address' => 'venue->address',
+				'start_date' => 'start_date',
+				'cost' => 'cost'
+			),
+		);
+		
+		$filename = 'single-event.php'; // filename of template
+		$fullTemplatePath = TEMPLATEPATH . DIRECTORY_SEPARATOR . $prefix . DIRECTORY_SEPARATOR . $filename;
+		$returnTemplate = (file_exists($fullTemplatePath)) ? $fullTemplatePath : $plugindir . DIRECTORY_SEPARATOR . $themeFilesDir . DIRECTORY_SEPARATOR . $filename;
+		doCustomThemeRedirect($returnTemplate, true, $data);
+		return;
+		
+	}
+	
+}
+
+/*
+ *
+ * Process theme redirect
+ *
+ */
+function doCustomThemeRedirect($path, $force = false, $data = array())
+{
+	global $post, $wp_query;
+
+	if (have_posts() || $force) {
+		if (!empty($data)) extract($data);
+		include($path);
+		die();
+	} else {
+		$wp_query->is_404 = true;
+	}
+}
+
+add_action('template_redirect', 'customThemeRedirect');
+
+/*
+ *
+ * Register custom query vars
+ *
+ */
+function registerQueryVars($vars)
+{
+	$vars[] = 'custom_page';
+	$vars[] = 'event_id';
+	return $vars;
+}
+
+add_filter('query_vars', 'registerQueryVars');
+
