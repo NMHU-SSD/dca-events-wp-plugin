@@ -51,13 +51,8 @@ function api_request($url)
  *
  */
 
-function reWriteEvent()
+function reWriteEvent($wp_rewrite)
 {
-	/** @global WP_Rewrite $wp_rewrite */
-	global $wp_rewrite;
-	//'https://test-dca-mc.nmdca.net/wp-json/tribe/events/v1/events/" . $event->id 
-
-
 	$newRules = array(
 		'https://test-dca-mc.nmdca.net/wp-json/tribe/events/v1/?$' => '/events/?custom_page=event',
 		'events/(\d+)/?$' => sprintf(
@@ -71,11 +66,11 @@ function reWriteEvent()
 
 add_action('generate_rewrite_rules', 'reWriteEvent');
 
-function themeRedirect($passed_event)
+function themeRedirect()
 {
 	$plugindir = dirname(__FILE__);
 	$prefix = 'myprefix';
-	$themeFilesDir = 'theme-files'; // Sub directory in your plugin to put all your template files
+	$themeFilesDir = 'templates'; // Sub directory in your plugin to put all your template files
 
 	$page = get_query_var('custom_page');
 	$event_id = (int) get_query_var('event_id', 0);
@@ -94,7 +89,7 @@ function themeRedirect($passed_event)
 			),
 			'action' => 'my_action'
 		);
-		$filename = 'archive-events.php'; // filename of template
+		$filename = 'dca-event.php'; // filename of template
 		$fullTemplatePath = TEMPLATEPATH . DIRECTORY_SEPARATOR . $prefix . DIRECTORY_SEPARATOR . $filename;
 		$returnTemplate = (file_exists($fullTemplatePath)) ? $fullTemplatePath : $plugindir . DIRECTORY_SEPARATOR . $themeFilesDir . DIRECTORY_SEPARATOR . $filename;
 		doMyThemeRedirect($returnTemplate, true, $data);
@@ -125,7 +120,7 @@ function doMyThemeRedirect($path, $force = false, $data = array())
 	}
 }
 
-add_action('template_redirect', 'themeRedirec');
+add_action('template_redirect', 'themeRedirect');
 
 /*
  *
@@ -262,16 +257,15 @@ function dca_events_plugin($atts = [])
 			$output .= "<h3 class='text-secondary'>" . $event->title . "</h3>";
 
 			//TODO: create a url to template page to get rest of details
-			// call themeRedirect($event->id)???
-			
-			$output .= "<a href='https://test-dca-mc.nmdca.net/wp-json/tribe/events/v1/events/" . $event->id . "'><button class='mt-4 btn btn-seconday'>More details</button></a>";
+			$output .= "<a href='https://test-dca-mc.nmdca.net/wp-json/tribe/events/v1/events/" + $event->id . "'><button class='mt-4 btn btn-seconday'>More details</button></a>";
 			$output .= "</div>";
+			
+			// Call Function?
 
-			//details to pull in template page (showing for now)
+
+     		//details to pull in template page (showing for now)
 			$output .= "<div class='col-12 mt-3'>";
-
 			$output .= "<p>" . $event->description . "</p>";
-
 			$output .= "<p class='mt-3'><b>Address: </b>" . $event->venue->address . "</p>";
 			$d = formatEventDate($event->start_date);
 			$t = formatEventTime($event->start_date);
@@ -279,7 +273,7 @@ function dca_events_plugin($atts = [])
 			$output .= "<p><b>Time: </b>" . $t . "</p>";
 
 			if ($event->cost == null) {
-				$output .= "<p><b>Cost: </b> $0.00 </p>";
+				$output .= "<p><b>Cost: </b> $0.00</p>";
 			} else {
 				$output .= "<p><b>Cost: </b>" . $event->cost . " </p>";
 			}
@@ -297,7 +291,6 @@ function dca_events_plugin($atts = [])
 	return $output;
 
 }
-
 
 //register shortcode
 add_shortcode('dca_events', 'dca_events_plugin');
