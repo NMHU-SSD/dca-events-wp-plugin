@@ -59,19 +59,13 @@ function dca_events_plugin($atts = [])
 	//gets shortcode vals
 	$atts = shortcode_atts(
 		array(
-			'site' => NULL,
-			//site id for museum
-			'today' => false,
-			//events by current day
-			'current-month' => false,
-			//events by current month
-			'date-range' => false,
-			//events by range
-			'range-start' => NULL,
-			//start range
-			'range-end' => NULL,
-			//end range
-			'limit' => NULL // num of events to display
+			'site' => NULL, //site id for museum
+			'today' => false, //events by current day
+			'current-month' => false, //events by current month
+			'date-range' => false, //events by range
+			'range-start' => NULL, //start range
+			'range-end' => NULL, //end range
+			'limit' => NULL //num of events to display,
 		),
 		$atts
 	);
@@ -160,31 +154,14 @@ function dca_events_plugin($atts = [])
 			$output .= "</div>";
 
 			$output .= "<div class='col-12 col-md-6'>";
-			$output .= "<span class='lead text-warning'>" . $event->venue->venue . "</span>";
-			$output .= "<h3 class='text-secondary'>" . $event->title . "</h3>";
-
+			$output .= "<span class='lead'>" . $event->venue->venue . "</span>";
+			$output .= "<h3 class=''>" . $event->title . "</h3>";
 			$url = site_url() . "/events/". $event->id;
 			$output .= "<a href='".$url."'><button class='mt-4 btn btn-seconday'>More details</button></a>";
 			$output .= "</div>";
 			
-		
-
-     		//details to pull in template page (showing for now)
-			$output .= "<div class='col-12 mt-3'>";
-			$output .= "<p>" . $event->description . "</p>";
-			$output .= "<p class='mt-3'><b>Address: </b>" . $event->venue->address . "</p>";
-			$d = formatEventDate($event->start_date);
-			$t = formatEventTime($event->start_date);
-			$output .= "<p><b>Date: </b>" . $d . "</p>";
-			$output .= "<p><b>Time: </b>" . $t . "</p>";
-
-			if ($event->cost == null) {
-				$output .= "<p><b>Cost: </b> $0.00</p>";
-			} else {
-				$output .= "<p><b>Cost: </b>" . $event->cost . " </p>";
-			}
+			
 			$output .= "</div>";
-			$output .= '</div>';
 
 		}
 
@@ -236,18 +213,12 @@ class DCAEventsPlugin
 	public function dca_events_plugin_add_plugin_page()
 	{
 		add_menu_page(
-			'DCA Events Plugin',
-			// page_title
-			'DCA Events Plugin',
-			// menu_title
-			'manage_options',
-			// capability
-			'dca-events-plugin',
-			// menu_slug
-			array($this, 'dca_events_plugin_create_admin_page'),
-			// function
-			'dashicons-admin-generic',
-			// icon_url
+			'DCA Events Plugin',// page_title
+			'DCA Events Plugin',// menu_title
+			'manage_options',// capability
+			'dca-events-plugin', // menu_slug
+			array($this, 'dca_events_plugin_create_admin_page'), // function
+			'dashicons-admin-generic',// icon_url
 			75 // position
 		);
 	}
@@ -383,7 +354,8 @@ function customRewriteEvent()
 	/** @global WP_Rewrite $wp_rewrite */
 	global $wp_rewrite;
 	
-		
+	$wp_rewrite->flush_rules(true);
+	
 	$newRules = array(
 		'events/?$' => 'index.php?custom_page=events',
         'events/(\d+)/?$' => sprintf(
@@ -409,8 +381,10 @@ function customThemeRedirect()
 	//if id is empty you should show all events (what the shortcode outputs)
 	if ($page == 'events' && empty($event_id)) {
 
-		//use shortcode function:
-		$data = dca_events_plugin();
+		//use shortcode function to pass output of events
+		$data = array(
+			'events' => dca_events_plugin()
+		);
 		
 		$filename = 'events.php'; // filename of template
 		$fullTemplatePath = TEMPLATEPATH . DIRECTORY_SEPARATOR . $prefix . DIRECTORY_SEPARATOR . $filename;
@@ -423,17 +397,13 @@ function customThemeRedirect()
 	elseif ($page == 'events' && !empty($event_id)) 
 	{
 		
-		///TODO - actually query the single event using API and send as data to template
+		//query the single event using API and send as data to template
+		$_API_URL = "https://test-dca-mc.nmdca.net/wp-json/tribe/events/v1/events/" . $event_id;
+		$response_data = api_request($_API_URL);
 		
+		// pass event data to the template
 		$data = array(
-			// Data you can pass to the template
-			'event' => array(
-				'title' => 'title', 
-				'description' => 'description',
-				'address' => 'venue->address',
-				'start_date' => 'start_date',
-				'cost' => 'cost'
-			),
+			'event' => $response_data
 		);
 		
 		$filename = 'single-event.php'; // filename of template
