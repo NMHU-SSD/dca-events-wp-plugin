@@ -137,7 +137,7 @@ function dca_events_plugin($atts = [])
 	$response_data = api_request($_API_URL);
 
 	// Start a container
-	$output .= '<div class="container-fluid p-0 mx-auto">';
+	$output .= '<div class="container-fluid p-0 ">';
 
 	// If response data and events are empty
 	if ($response_data == null || $response_data->events == []) {
@@ -148,21 +148,27 @@ function dca_events_plugin($atts = [])
 	} else {
 		// Return results  in html format
 		foreach ($response_data->events as $event) {
+			
 			// Create row
-			$output .= "<div class='row p-0 ms-0 ml-0 mt-5 mb-5'>";
+			$output .= "<div class='row p-0 mt-5 mb-5 '>";
+			
 			// Create 1st column
-			$output .= "<div class='col-12 col-md-6 p-0'>";
+			$output .= "<div class='col-12 col-md-6 p-2'>";
 			$output .= "<img src='" . $event->image->url . "'  style='min-height: 200px; height: 100%; width: 100%; object-fit: cover;'   >";
 			// End of 1st column
 			$output .= "</div>";
+			
 			// Create 2nd column
-			$output .= "<div class='col-12 col-md-6'>";
+			$output .= "<div class='col-12 col-md-6 text-center text-md-start'>";
+			
+			$output .= "<h3>" . $event->title . "</h3>";
 			$output .= "<span class='lead'>" . $event->venue->venue . "</span>";
-			$output .= "<h3 class=''>" . $event->title . "</h3>";
+			$output .= "<br>";
 			$url = site_url() . "/events/". $event->id;
-			$output .= "<a href='".$url."'><button class='mt-4 btn btn-seconday'>More details</button></a>";
+			$output .= "<a href='".$url."' ><button class='btn btn-seconday mt-4'>More details</button></a>";
 			// End of 2nd column
 			$output .= "</div>";
+			
 			// End of row
 			$output .= "</div>";
 
@@ -192,8 +198,8 @@ add_shortcode('dca_events', 'dca_events_plugin');
 // Function for adding bootstrap
 function addBootStrap()
 {
-	wp_enqueue_style("bootstrapCSS", "https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css");
-	wp_enqueue_script("bootstrapJS", "https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.min.js");
+	wp_enqueue_style("bootstrap", "https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/css/bootstrap.min.css");
+	wp_enqueue_script("bootstrapJS", "https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/js/bootstrap.min.js", array('jquery'),true);
 }
 // Adding a hook for bootstrap
 add_action("wp_enqueue_scripts", "addBootStrap");
@@ -218,18 +224,19 @@ class DCAEventsPlugin
 	{
 		add_menu_page(
 			// page_title
-			'DCA Events Plugin',
+			'DCA Events Plugin', 
 			// menu_title
 			'DCA Events Plugin',
 			// capability
-			'manage_options',
+			'manage_options', 
 			// menu_slug
 			'dca-events-plugin',
 			// function
-			array($this, 'dca_events_plugin_create_admin_page'),
-			'dashicons-admin-generic',// icon_url
-			 // position of where the plugin will go
-			75
+			array($this, 'dca_events_plugin_create_admin_page'), 
+			// icon_url
+			'dashicons-admin-generic',
+			// position of where the plugin will go
+			75 
 		);
 	}
 
@@ -372,6 +379,7 @@ function customRewriteEvent()
 	
 	/** @global WP_Rewrite $wp_rewrite */
 	global $wp_rewrite;
+	
 	// Manually flush the permalinks
 	$wp_rewrite->flush_rules(true);
 
