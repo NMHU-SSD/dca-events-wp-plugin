@@ -1,9 +1,9 @@
-<?php 
+<?php
 /**
  * events.php
  * The template for displaying all events
  *
-*/
+ */
 
 get_header();
 
@@ -14,10 +14,8 @@ get_header();
 
 /*
  * events as list
-*/
-
-
-echo $data;
+ */
+echo $data["events"];
 
 ?>
 
