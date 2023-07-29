@@ -12,24 +12,24 @@ get_header();
 $event = $data["event"];
 
 ?>
-
+<!-- Start container -->
 <main class="container">
 	<header class="container-fluid">
 		<?php 
 			echo "<h1 >".$event->title ."</h1>";
 		?>
-	</header><!-- header -->
+	</header><!-- End header -->
 
 	<div class="container-fluid">
-		
+		<!-- Start row -->
 		<div class='row p-0 ms-0 ml-0 mt-5 mb-5'>
-			
+			<!-- Start 1st column -->
 			<div class='col-12 col-md-6 p-0'>
 				<?php 
 				echo "<img src='" . $event->image->url . "'  style='min-height: 200px;  height: 100%; width: 100%; object-fit: cover;'   >";
 				?>
 			</div>
-			
+			<!-- Start 2nd column -->
 			<div class='col-12 col-md-6'>
 				
 				<?php 
@@ -50,18 +50,19 @@ $event = $data["event"];
 				?>
 			
 			</div>
-		
+
+			<!-- Start 3rd column -->
 			<div class='col-12 mt-3'>
 				<?php 
 				echo "<p>" . $event->description . "</p>";
 				?>
-			</div>
+			</div> <!-- End 3rd column -->
 			
 		</div><!-- end row -->
 		
-	</div>
+	</div><!-- end row -->
 	
-</main>
+</main><!-- end container -->
 	
 
 <?php
