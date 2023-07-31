@@ -1,23 +1,20 @@
-<?php
+<?php 
 /**
  * events.php
  * The template for displaying all events
  *
- */
+*/
 
 get_header();
 
 ?>
-<!-- Start container -->
-<main class="container">
 
-	<!-- Start header container -->
+<main class="container">
 <header class="container-fluid">
-	<?php
-	echo "<h1 >DCA Events</h1>";
+	<?php 
+		echo "<h1 >DCA Events</h1>";
 	?>
-	<!-- End header container -->
-</header>
+</header><!-- header -->
 
 <div class="container-fluid">
 
@@ -25,11 +22,13 @@ get_header();
 
 /*
  * events as list
- */
-echo $data["events"];
+*/
+
+echo $data['events'];
 
 ?>
-
+</div>
+</main>
 
 <?php
 get_footer();
