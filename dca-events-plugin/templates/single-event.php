@@ -34,8 +34,8 @@ $event = $data["event"];
 				
 				<?php 
 		
-				$output = "<p class='mt-3'><b>" . $event->venue->venue . "</b></p>";
-				$output .= "<p><b>Address: </b>" . $event->venue->address . "</p>";
+				$output = "<h3>" . $event->venue->venue . "</h3>";
+				$output .= "<p><b>Address: </b>" . $event->venue->address .", ".$event->venue->city.", ".$event->venue->state. ", ".$event->venue->zip. "</p>";
 				$d = formatEventDate($event->start_date);
 				$t = formatEventTime($event->start_date);
 				$output .= "<p><b>Date: </b>" . $d . "</p>";
