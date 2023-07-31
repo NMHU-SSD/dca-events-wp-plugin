@@ -408,7 +408,7 @@ class DCAEventsPlugin
 		
 		<p>Events page will display events by the selected site id. </p>									
 		
-		<p class="lead">View <?php echo "<a href='".site_url() . "/events"."'>". site_url() . "/events"."</a>"; ?></p>
+		<p><em>View <?php echo "<a href='".site_url() . "/events"."'>". site_url() . "/events"."</a>"; ?></em></p>
 		
 		<?php		
 		
