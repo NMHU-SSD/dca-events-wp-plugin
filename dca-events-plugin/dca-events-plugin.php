@@ -99,7 +99,7 @@ function dca_events_plugin($atts = [])
 
 	// Get API results
 	// docs: https://developer.wordpress.org/rest-api/using-the-rest-api/
-	// sample: http://nmdcamediadev.wpengine.com//wp-json/tribe/events/v1/events/?page=10&start_date=2023-06-26&end_date=2023-06-29&venue=108
+	// sample: https://test-dca-mc.nmdca.net/wp-json/tribe/events/v1/events/?per_page=10&start_date=2023-06-26&end_date=2023-06-29&venue=108
 
 	// Start API string
 	$_API_URL = "https://test-dca-mc.nmdca.net/wp-json/tribe/events/v1/events/?";
@@ -108,7 +108,6 @@ function dca_events_plugin($atts = [])
 	// Set limit in API url
 	$_API_URL .= "per_page=" . $_LIMIT_OPT;
 		
-	
 
 	// Set dates based on user options
 	if ($_CURR_DAY_OPT == true) {
@@ -144,19 +143,18 @@ function dca_events_plugin($atts = [])
 		$_API_URL .= "&start_date=" . $first . "&end_date=" . $last;
 	}
 
+	//order by date in ascending order
+	$_API_URL .= "&order=asc&orderby=date";
 
-	//check is site id exists before adding to api endpoint
+	//check is site id is set before adding to api endpoint
+	//if null - shows events for all sites
 	if ($_SITE_ID != NULL){
-		
 		// Set venue in API URL
 		$_API_URL .= "&venue=" . $_SITE_ID;
-		
 	}
 	
-	
-	
 
-	// Make an API request
+	// Make the API request
 	$response_data = api_request($_API_URL);
 
 	// Start a container
@@ -418,7 +416,7 @@ class DCAEventsPlugin
 	public function venue_id_callback()
 	{
 		// Base URL for venues
-		$url = "https://test-dca-mc.nmdca.net/wp-json/tribe/events/v1/venues";
+		$url = "https://test-dca-mc.nmdca.net/wp-json/tribe/events/v1/venues?per_page=100";
 		$response_data = api_request($url);
 		// for loop for looping through all the venues and outputting a dropdown menu
 		?> 	
