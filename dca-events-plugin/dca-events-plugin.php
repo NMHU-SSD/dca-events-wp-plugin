@@ -274,20 +274,16 @@ class DCAEventsPlugin
 		<div class="container">
 			<h1 class="display-1 mb-2">DCA Events Plugin</h1>
 			
-			<h3>How to use DCA Events Plugin shortcode</h3>
-
-			<p>Using the shortcode will display limited number of events by site id or date range.</p>									
-			
-			<h4>Instructions</h4>
+			<h3>Shortcode Options</h3>
 			<p>Create a post or page using the [dca_events *options] shortcode with avaliable options.</p>
-			
-			
+			<p>Using the shortcode will display limited number of events by site id or date range.</p>	
+										
 			<b>Examples</b>
-			<p>[dca_events site="120" today='true'] will return the default number of events (10) for today for the site with an id of 120 (New Mexico Museum of Art) </p>
+			<p>[dca_events site="120" today='true'] will return the default number of events (10) with today's date for the site with an id of 120 (New Mexico Museum of Art) </p>
 			<p>[dca_events limit=7 current-month='true'] will return 7 events for the current month</p>
 			<p>[dca_events limit=2 date-range='true' range-start=2023-07-19 range-end=2023-07-23] will return 2 events that are happening July 19, 2023 to July 23, 2023 </p>
 			
-			<b >Shortcode Options Avaliable</b>
+			<b>Shortcode Options Avaliable</b>
 			
 			<table class="table table-bordered table-sm"  >
 				<thead class="thead-light">
@@ -300,7 +296,7 @@ class DCAEventsPlugin
 				<tbody>
 				<tr>
 			        <th scope="row">site</th>
-					<td>set site ID in shortcode or set default in page settngs dropdown</td>
+					<td>set site ID in shortcode or set default in page settings dropdown</td>
 					<td>integer value</td>
 				</tr>
 				<tr>
@@ -310,12 +306,12 @@ class DCAEventsPlugin
 				</tr>
 				<tr>
 					<th scope="row">current-month</th>
-					<td>returns events by current month</td>
+					<td>returns events for the current month</td>
 					<td>TRUE or FALSE</td>
 				</tr>
 				<tr>
 					<th scope="row">date-range</th>
-					<td>return events by specific date range</td>
+					<td>return events for specific date range</td>
 					<td>TRUE or FALSE</td>
 				</tr>
 				<tr>
@@ -412,7 +408,7 @@ class DCAEventsPlugin
 		
 		<p>Events page will display events by the selected site id. </p>									
 		
-		<p>View <?php echo "<a href='".site_url() . "/events"."'>". site_url() . "/events"."</a>"; ?></p>
+		<p class="lead">View <?php echo "<a href='".site_url() . "/events"."'>". site_url() . "/events"."</a>"; ?></p>
 		
 		<?php		
 		
