@@ -13,7 +13,7 @@
  */
 
 
-/*
+/*------------------------------------
  *
  *	Helper functions
  *
@@ -41,24 +41,23 @@ function formatEventTime($date)
 // Function for an API request
 function api_request($url)
 {
-	
-	$arrContextOptions = array(
+	//context options for request
+	$options = array(
 	      "ssl" => array(
 	        "verify_peer" => false,
 	        "verify_peer_name" => false,
 	      )
 	);  
   
-	$context = stream_context_create($arrContextOptions);
+	$context = stream_context_create($options);
 	$response = file_get_contents($url,false,$context);
-	
 	
 	return json_decode($response);
 	
 }
 
 
-/* 
+/*--------------------------------------------
  *
  *	Plugin Shortcode function
  *
@@ -93,10 +92,10 @@ function dca_events_plugin($atts = [])
 	$_DATE_RANGE_END = ($atts['range-end'] == NULL) ? date("Y-m-d") : formatShortcodeDate($atts['range-end']);
 
 	// Set default limit if null - else typecast shortcode val
-	$_LIMIT_OPT = ($atts['limit'] == NULL) ? 10 : intval($atts['limit']);
+	$_LIMIT_OPT = ($atts['limit'] != NULL) ? intval($atts['limit']) : 10;
 
 	// Get events from site option else get default in settings menu
-	$_SITE_ID = ($atts['site'] != NULL) ? intval($atts['site']) : get_option('dca_events_plugin_option_name')['venue_id_0'];
+	$_SITE_ID = ($atts['site'] != NULL) ? intval($atts['site']) : get_option('dca_events_plugin_option_name')['venue_id'];
 
 	// Get API results
 	// docs: https://developer.wordpress.org/rest-api/using-the-rest-api/
@@ -105,8 +104,11 @@ function dca_events_plugin($atts = [])
 	// Start API string
 	$_API_URL = "https://test-dca-mc.nmdca.net/wp-json/tribe/events/v1/events/?";
 
+		
 	// Set limit in API url
 	$_API_URL .= "per_page=" . $_LIMIT_OPT;
+		
+	
 
 	// Set dates based on user options
 	if ($_CURR_DAY_OPT == true) {
@@ -143,12 +145,15 @@ function dca_events_plugin($atts = [])
 	}
 
 
+	//check is site id exists before adding to api endpoint
 	if ($_SITE_ID != NULL){
 		
 		// Set venue in API URL
 		$_API_URL .= "&venue=" . $_SITE_ID;
 		
 	}
+	
+	
 	
 
 	// Make an API request
@@ -205,7 +210,7 @@ function dca_events_plugin($atts = [])
 // Register shortcode
 add_shortcode('dca_events', 'dca_events_plugin');
 
-/*
+/*-------------------------------------------------
  *
  *	Bootstrap
  *
@@ -225,7 +230,7 @@ add_action("wp_enqueue_scripts", "addBootStrap");
 add_action( 'admin_init', 'addBootStrap' );
 
 
-/*
+/*--------------------------------------------
  *
  *	Plugin Settings Page
  *
@@ -269,54 +274,82 @@ class DCAEventsPlugin
 		<div class="container">
 			<h1 class="display-1 mb-2">DCA Events Plugin</h1>
 			
-			<h3>How to use Shortcode</h3>
-			<p>Using shortcode you can pull in events by site id, dates, and number of events.</p>									
+			<h3>How to use DCA Events Plugin shortcode</h3>
+
+			<p>Using the shortcode will display limited number of events by site id or date range.</p>									
 			
 			<h4>Instructions</h4>
-			<p>- Create a post or page.</p>
-			<p>- Using the shortcode format type in your selections: [dca_events **options ]</p>
+			<p>Create a post or page using the [dca_events *options] shortcode with avaliable options.</p>
 			
 			
 			<b>Examples</b>
+			<p>[dca_events site="120" today='true'] will return the default number of events (10) for today for the site with an id of 120 (New Mexico Museum of Art) </p>
 			<p>[dca_events limit=7 current-month='true'] will return 7 events for the current month</p>
-			<p>[dca_events limit=4 current-day='true'] will return 4 events for the current day</p>
 			<p>[dca_events limit=2 date-range='true' range-start=2023-07-19 range-end=2023-07-23] will return 2 events that are happening July 19, 2023 to July 23, 2023 </p>
 			
-			<b>Shortcode Options Avaliable</b>
+			<b >Shortcode Options Avaliable</b>
 			
-			<table class="table border"  >
-				<tr> <th>NAME</th> <th>DESCRIPTION</th> <th>FORMAT</th> <th>OPTION</th> </tr>
-				<tr> <td>site</td> <td>this option you select on this page under the Settings Section</td> <td>Drop down menu</td> <td>list of sites</td> </tr>
-				<tr> <td>today</td> <td>returns events by current day</td> <td>current-day= </td> <td>TRUE or FALSE</td> </tr>
-				<tr> <td>current-month</td> <td>returns events by current month</td> <td>current-month= </td> <td>TRUE or FALSE</td> </tr>
-				<tr> <td>date-range</td> <td>return events by range</td> <td>date-range= </td> <td>TRUE or FALSE</td> </tr>
-				<tr> <td>range-start</td> <td>used only with date-range, define a specific start range</td> <td>only in YYYY-MM-DD</td> <td>any dates</td> </tr>
-				<tr> <td>range-end</td> <td>used only with date-range, define a specific end range</td> <td>only in YYYY-MM-DD</td> <td>any dates</td> </tr>
-				<tr> <td>limit</td> <td>returns the number of events to display</td> <td>limit=</td> <td>any integer value</td> </tr>
+			<table class="table table-bordered table-sm"  >
+				<thead class="thead-light">
+					<tr>
+						<th scope="col">OPTION</th>
+						<th scope="col">DESCRIPTION</th>
+						<th scope="col">FORMAT</th>
+					</tr>
+				</thead>
+				<tbody>
+				<tr>
+			        <th scope="row">site</th>
+					<td>set site ID in shortcode or set default in page settngs dropdown</td>
+					<td>integer value</td>
+				</tr>
+				<tr>
+					<th scope="row">today</th>
+					<td>returns today's events</td>
+					<td>TRUE or FALSE</td>
+				</tr>
+				<tr>
+					<th scope="row">current-month</th>
+					<td>returns events by current month</td>
+					<td>TRUE or FALSE</td>
+				</tr>
+				<tr>
+					<th scope="row">date-range</th>
+					<td>return events by specific date range</td>
+					<td>TRUE or FALSE</td>
+				</tr>
+				<tr>
+					<th scope="row">range-start</th>
+					<td>if date-range is true, define a specific start range</td>
+					<td> YYYY-MM-DD</td> 
+				</tr>
+				<tr>
+					<th scope="row">range-end</th>
+					<td>if date-range is true, define a specific end range</td>
+					<td>YYYY-MM-DD</td>
+				</tr>
+				<tr>
+					<th scope="row">limit</th>
+					<td>returns specific number of events to display (default is 10)</td>
+					<td>any integer value</td>
+				</tr>
+				</tbody>
 			</table>
 			
 			
-			
-			
-				
 			<form method="post" action="options.php">
 				
 				
 				<?php
 				
-				
 					settings_fields('dca_events_plugin_option_group');
 					
 					do_settings_sections('dca-events-plugin-admin');
 					
-					
 					submit_button();
 					?>
 			</form>
-			
-			<p>View <?php echo "<a href='".site_url() . "/events"."'>". site_url() . "/events"."</a>"; ?></p>
-			
-			
+				
 			
 		
 		</div>
@@ -348,24 +381,25 @@ class DCAEventsPlugin
 		// Adding the fields
 		add_settings_field(
 			// id
-			'venue_id_0',
+			'venue_id',
 			// title
-			'Venue ID',
+			'Site ID',
 			// callback
-			array($this, 'venue_id_0_callback'),
+			array($this, 'venue_id_callback'),
 			// page
 			'dca-events-plugin-admin',
 			// section
 			'dca_events_plugin_setting_section' 
 		);
+		
 	}
 
 	// Function to sanitize the inputs
 	public function dca_events_plugin_sanitize($input)
 	{
 		$sanitary_values = array();
-		if (isset($input['venue_id_0'])) {
-			$sanitary_values['venue_id_0'] = $input['venue_id_0'];
+		if (isset($input['venue_id'])) {
+			$sanitary_values['venue_id'] = $input['venue_id'];
 		}
 
 		return $sanitary_values;
@@ -374,24 +408,31 @@ class DCAEventsPlugin
 
 	public function dca_events_plugin_section_info()
 	{ // left blank intentionally
+		?>
 		
-
+		<p>Events page will display events by the selected site id. </p>									
+		
+		<p>View <?php echo "<a href='".site_url() . "/events"."'>". site_url() . "/events"."</a>"; ?></p>
+		
+		<?php		
+		
 	}
 
 	// Callback function for retreiving venues
-	public function venue_id_0_callback()
+	public function venue_id_callback()
 	{
 		// Base URL for venues
 		$url = "https://test-dca-mc.nmdca.net/wp-json/tribe/events/v1/venues";
 		$response_data = api_request($url);
 		// for loop for looping through all the venues and outputting a dropdown menu
-		?> 				
+		?> 	
 		
-				<select name="dca_events_plugin_option_name[venue_id_0]" id="venue_id_0"> ?>
+		
+				<select name="dca_events_plugin_option_name[venue_id]" id="venue_id"> ?>
 					
 					<?php
 					
-					 $all = (isset($this->dca_events_plugin_options['venue_id_0']) && $this->dca_events_plugin_options['venue_id_0'] == NULL )? 'selected' : '';
+					 $all = (isset($this->dca_events_plugin_options['venue_id']) && $this->dca_events_plugin_options['venue_id'] == NULL )? 'selected' : '';
 					 
 					?>
 					
@@ -401,10 +442,10 @@ class DCAEventsPlugin
 				<?php foreach ($response_data->venues as $venue) { ?>
 		
 									<?php
-									$selected = (isset($this->dca_events_plugin_options['venue_id_0']) &&
-										$this->dca_events_plugin_options['venue_id_0'] == $venue->id) ? 'selected' : ''; ?>
+									$selected = (isset($this->dca_events_plugin_options['venue_id']) &&
+										$this->dca_events_plugin_options['venue_id'] == $venue->id) ? 'selected' : ''; ?>
 									<option value="<?php echo $venue->id ?>" <?php echo $selected; ?> > 
-										<?php echo $venue->id . " " . $venue->venue ?>
+										<?php echo $venue->id . " - " . $venue->venue ?>
 									</option>
 		
 				<?php } ?>
@@ -419,7 +460,11 @@ if (is_admin())
 
 
 
-/*
+
+
+
+
+/*--------------------------------------------------
  *
  *	URL Rewrite and Custom Template
  *
@@ -431,8 +476,6 @@ function customRewriteEvent()
 	/** @global WP_Rewrite $wp_rewrite */
 	global $wp_rewrite;
 	
-	// Manually flush the permalinks
-	$wp_rewrite->flush_rules(true);
 
 	// create the rules for rewriting the endpoints for /events and /events/id
 	$newRules = array(
@@ -444,9 +487,24 @@ function customRewriteEvent()
 	);
 
 	$wp_rewrite->rules = $newRules + (array) $wp_rewrite->rules;
+	
 }
 // Adding the hook for customRewriteEvents
 add_action('generate_rewrite_rules', 'customRewriteEvent');
+
+
+/**
+ * Flush rewrite rules on activation
+ */
+function wpdocs_flush_rewrites() {
+	// call your CPT registration function here (it should also be hooked into 'init')
+	wpdocs_custom_post_types_registration();
+	flush_rewrite_rules();
+}
+
+register_activation_hook( __FILE__, 'wdocs_flush_rewrites' );
+
+
 
 // Function for the theme redirect
 function customThemeRedirect()
