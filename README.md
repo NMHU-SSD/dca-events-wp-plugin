@@ -26,7 +26,7 @@ This section describes how to install the plugin and get it working. e.g.
 The NMDCA Media Center is a wordpress website and REST API for events and exhibitions for all NMDCA Cultural and Historic Sites. 
 
 Endpoint:
-- https://nmdcamediadev.wpengine.com/wp-json/tribe/events/v1/events/
+- https://test-dca-mc.nmdca.net/wp-json/tribe/events/v1/events/
 
 Some parameters:
 - per_page limits the results
@@ -35,16 +35,17 @@ Some parameters:
 - venue sets the site id
 
 Query example:
-- http://nmdcamediadev.wpengine.com//wp-json/tribe/events/v1/events/?per_page=25&start_date=2023-06-26&end_date=023-06-29&venue=108
+- https://test-dca-mc.nmdca.net/wp-json/tribe/events/v1/events/?per_page=25&start_date=2023-06-26&end_date=023-06-29&venue=108
 
 
-API doc:
-- https://nmdcamediadev.wpengine.com/wp-json/tribe/events/v1/doc
+API docs:
+- https://test-dca-mc.nmdca.net/wp-json/tribe/events/v1/doc
 
-WPDocs:
+WP Docs:
 - https://developer.wordpress.org/rest-api/using-the-rest-api/
 
 ## Internship
 Client: New Mexico Department of Cultural Affairs
 
 Student Intern: [Anita Martin](https://github.com/anita-martin5703/)
+Faculty Advisor: [Rianne Trujillo](https://github.com/littlepandabear/)

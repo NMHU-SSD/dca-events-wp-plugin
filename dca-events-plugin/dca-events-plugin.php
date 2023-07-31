@@ -3,7 +3,7 @@
  * Plugin Name:     DCA Events Plugin
  * Plugin URI:      https://github.com/NMHU-SSD/dca-events-wp-plugin
  * Description:     New Mexico Department of Cultural Affairs Events
- * Author:          NMHU SSD intern Anita Martin
+ * Author:          NMHU SSD - intern, Anita Martin & Faculty Advisor, Rianne Trujillo
  * Author URI:      https://github.com/NMHU-SSD
  * Text Domain:     dca-events-plugin
  * Domain Path:     /languages
@@ -143,9 +143,7 @@ function dca_events_plugin($atts = [])
 		$_API_URL .= "&start_date=" . $first . "&end_date=" . $last;
 	}
 
-	//order by date in ascending order
-	$_API_URL .= "&order=asc&orderby=date";
-
+	
 	//check is site id is set before adding to api endpoint
 	//if null - shows events for all sites
 	if ($_SITE_ID != NULL){
@@ -158,12 +156,11 @@ function dca_events_plugin($atts = [])
 	$response_data = api_request($_API_URL);
 
 	// Start a container
-	$output .= '<div class="container-fluid p-0 ">';
+	$output = '<div class="container-fluid p-0 ">';
 
 	// If response data and events are empty
 	if ($response_data == null || $response_data->events == []) {
-		// Console out error and display message to user
-		$output .= "<script>console.log('Error: " . json_last_error() . "');</script>";
+		// display message to user
 		$output .= "<h3 class='text-error'>" . "Sorry, no events to display. Please try again." . "</h3>" . "<br>";
 
 	} else {
@@ -277,9 +274,9 @@ class DCAEventsPlugin
 			<p>Using the shortcode will display limited number of events by site id or date range.</p>	
 										
 			<b>Examples</b>
-			<p>[dca_events site="120" today='true'] will return the default number of events (10) with today's date for the site with an id of 120 (New Mexico Museum of Art) </p>
-			<p>[dca_events limit=7 current-month='true'] will return 7 events for the current month</p>
-			<p>[dca_events limit=2 date-range='true' range-start=2023-07-19 range-end=2023-07-23] will return 2 events that are happening July 19, 2023 to July 23, 2023 </p>
+			<p>[dca_events site="120" today="true"] will return the default number of events (10) with today's date for the site with an id of 120 (New Mexico Museum of Art) </p>
+			<p>[dca_events limit="7" current-month="true"] will return 7 events for the current month</p>
+			<p>[dca_events limit="20" date-range="true" range-start="2023-07-19" range-end="2023-07-23"] will return 20 events between July 19, 2023 and July 23, 2023 </p>
 			
 			<b>Shortcode Options Avaliable</b>
 			
@@ -404,9 +401,9 @@ class DCAEventsPlugin
 	{ // left blank intentionally
 		?>
 		
-		<p>Events page will display events by the selected site id. </p>									
+		<p>Events page will display events based on the selected site id. </p>									
 		
-		<p><em>View <?php echo "<a href='".site_url() . "/events"."'>". site_url() . "/events"."</a>"; ?></em></p>
+		<p>View events page: <em><?php echo "<a target='_blank' href='".site_url() . "/events"."'>". site_url() . "/events"."</a>"; ?></em></p>
 		
 		<?php		
 		
@@ -417,7 +414,9 @@ class DCAEventsPlugin
 	{
 		// Base URL for venues
 		$url = "https://test-dca-mc.nmdca.net/wp-json/tribe/events/v1/venues?per_page=100";
+
 		$response_data = api_request($url);
+		
 		// for loop for looping through all the venues and outputting a dropdown menu
 		?> 	
 		
@@ -433,6 +432,7 @@ class DCAEventsPlugin
 					<option value="" <?php echo $all; ?> > 
 						All Sites
 					</option>
+					
 				<?php foreach ($response_data->venues as $venue) { ?>
 		
 									<?php
@@ -449,8 +449,10 @@ class DCAEventsPlugin
 
 }
 // Plugin will only show if you are logged in as the administrator
-if (is_admin())
+if (is_admin()){
 	$dca_events_plugin = new DCAEventsPlugin();
+}
+	
 
 
 
