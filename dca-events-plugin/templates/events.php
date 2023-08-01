@@ -12,7 +12,7 @@ get_header();
 <main class="container">
 <header class="container-fluid">
 	<?php 
-		echo "<h1 >DCA Events</h1>";
+		echo "<h1> DCA Events</h1>";
 	?>
 </header><!-- header -->
 

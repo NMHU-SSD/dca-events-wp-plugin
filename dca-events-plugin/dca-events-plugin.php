@@ -3,7 +3,7 @@
  * Plugin Name:     DCA Events Plugin
  * Plugin URI:      https://github.com/NMHU-SSD/dca-events-wp-plugin
  * Description:     New Mexico Department of Cultural Affairs Events
- * Author:          NMHU SSD - intern, Anita Martin & Faculty Advisor, Rianne Trujillo
+ * Author:          NMHU SSD intern Anita Martin & faculty advisor Rianne Trujillo
  * Author URI:      https://github.com/NMHU-SSD
  * Text Domain:     dca-events-plugin
  * Domain Path:     /languages
@@ -12,6 +12,15 @@
  * @package         DCA_Events_Plugin
  */
 
+
+/*------------------------------------
+ *
+ *	GLOBALS
+ *
+ */
+
+//base url for API requests
+$GLOBALS['API_BASE_URL'] = "https://test-dca-mc.nmdca.net";
 
 /*------------------------------------
  *
@@ -62,7 +71,7 @@ function api_request($url)
  *	Plugin Shortcode function
  *
  */
-function dca_events_plugin($atts = [])
+function dca_events_shortcode($atts = [])
 {
 	// normalize attribute keys, and lowercase 
 	$atts = array_change_key_case((array) $atts, CASE_LOWER);
@@ -70,7 +79,7 @@ function dca_events_plugin($atts = [])
 	// Gets shortcode vals
 	$atts = shortcode_atts(
 		array(
-			'site' => NULL, //site id for museum
+			'site' => NULL, //venue id for museum
 			'today' => false, //events by current day
 			'current-month' => false, //events by current month
 			'date-range' => false, //events by range
@@ -91,18 +100,27 @@ function dca_events_plugin($atts = [])
 	$_DATE_RANGE_START = ($atts['range-start'] == NULL) ? date("Y-m-d") : formatShortcodeDate($atts['range-start']);
 	$_DATE_RANGE_END = ($atts['range-end'] == NULL) ? date("Y-m-d") : formatShortcodeDate($atts['range-end']);
 
-	// Set default limit if null - else typecast shortcode val
-	$_LIMIT_OPT = ($atts['limit'] != NULL) ? intval($atts['limit']) : 10;
+	// Get limit from shortcode limit option else get default in plugin settings menu
+	$_LIMIT_OPT = ($atts['limit'] != NULL) ? intval($atts['limit']) : intval(get_option('dca_events_plugin_options')['dca_events_plugin_option_limit']);
 
-	// Get events from site option else get default in settings menu
-	$_SITE_ID = ($atts['site'] != NULL) ? intval($atts['site']) : get_option('dca_events_plugin_option_name')['venue_id'];
+	
+	//if shortcode limit option and settings menu null, set default to 10
+	if ( $atts['limit'] == NULL && get_option('dca_events_plugin_options')['dca_events_plugin_option_limit'] == NULL ) {
+		$_LIMIT_OPT = 10;
+	}
+	
+
+	// Get events from shortcode site option else get default from plugin settings menu
+	$_SITE_ID = ($atts['site'] != NULL) ? intval($atts['site']) : (get_option('dca_events_plugin_options')['dca_events_plugin_option_venue'] == "" ? NULL : intval(get_option('dca_events_plugin_options')['dca_events_plugin_option_venue']) );
+	
+	
 
 	// Get API results
 	// docs: https://developer.wordpress.org/rest-api/using-the-rest-api/
 	// sample: https://test-dca-mc.nmdca.net/wp-json/tribe/events/v1/events/?per_page=10&start_date=2023-06-26&end_date=2023-06-29&venue=108
 
 	// Start API string
-	$_API_URL = "https://test-dca-mc.nmdca.net/wp-json/tribe/events/v1/events/?";
+	$_API_URL = $GLOBALS['API_BASE_URL'] . "/wp-json/tribe/events/v1/events/?";
 
 		
 	// Set limit in API url
@@ -145,8 +163,8 @@ function dca_events_plugin($atts = [])
 
 	
 	//check is site id is set before adding to api endpoint
-	//if null - shows events for all sites
-	if ($_SITE_ID != NULL){
+	//if null or empty string - shows events for all sites
+	if ($_SITE_ID != NULL ){
 		// Set venue in API URL
 		$_API_URL .= "&venue=" . $_SITE_ID;
 	}
@@ -203,9 +221,9 @@ function dca_events_plugin($atts = [])
 }
 
 // Register shortcode
-add_shortcode('dca_events', 'dca_events_plugin');
+add_shortcode('dca_events', 'dca_events_shortcode');
 
-/*-------------------------------------------------
+/*--------------------------------------------
  *
  *	Bootstrap
  *
@@ -231,233 +249,300 @@ add_action( 'admin_init', 'addBootStrap' );
  *
  */
 
-class DCAEventsPlugin
-{
-	private $dca_events_plugin_options;
 
-	public function __construct()
-	{
-		add_action('admin_menu', array($this, 'dca_events_plugin_add_plugin_page'));
-		add_action('admin_init', array($this, 'dca_events_plugin_page_init'));
-	}
+/**
+ * @internal never define functions inside callbacks.
+ * these functions could be run multiple times; this would result in a fatal error.
+ */
 
-	public function dca_events_plugin_add_plugin_page()
-	{
-		add_menu_page(
-			// page_title
-			'DCA Events Plugin', 
-			// menu_title
-			'DCA Events Plugin',
-			// capability
-			'manage_options', 
-			// menu_slug
-			'dca-events-plugin',
-			// function
-			array($this, 'dca_events_plugin_create_admin_page'), 
-			// icon_url
-			'dashicons-admin-generic',
-			// position of where the plugin will go
-			75 
-		);
-	}
-
-	// Function for displaying the setting page
-	public function dca_events_plugin_create_admin_page()
-	{
-		$this->dca_events_plugin_options = get_option('dca_events_plugin_option_name'); ?>
-		
-		<div class="container">
-			<h1 class="display-1 mb-2">DCA Events Plugin</h1>
-			
-			<h3>Shortcode Options</h3>
-			<p>Create a post or page using the [dca_events *options] shortcode with avaliable options.</p>
-			<p>Using the shortcode will display limited number of events by site id or date range.</p>	
-										
-			<b>Examples</b>
-			<p>[dca_events site="120" today="true"] will return the default number of events (10) with today's date for the site with an id of 120 (New Mexico Museum of Art) </p>
-			<p>[dca_events limit="7" current-month="true"] will return 7 events for the current month</p>
-			<p>[dca_events limit="20" date-range="true" range-start="2023-07-19" range-end="2023-07-23"] will return 20 events between July 19, 2023 and July 23, 2023 </p>
-			
-			<b>Shortcode Options Avaliable</b>
-			
-			<table class="table table-bordered table-sm"  >
-				<thead class="thead-light">
-					<tr>
-						<th scope="col">OPTION</th>
-						<th scope="col">DESCRIPTION</th>
-						<th scope="col">FORMAT</th>
-					</tr>
-				</thead>
-				<tbody>
-				<tr>
-			        <th scope="row">site</th>
-					<td>set site ID in shortcode or set default in page settings dropdown</td>
-					<td>integer value</td>
-				</tr>
-				<tr>
-					<th scope="row">today</th>
-					<td>returns today's events</td>
-					<td>TRUE or FALSE</td>
-				</tr>
-				<tr>
-					<th scope="row">current-month</th>
-					<td>returns events for the current month</td>
-					<td>TRUE or FALSE</td>
-				</tr>
-				<tr>
-					<th scope="row">date-range</th>
-					<td>return events for specific date range</td>
-					<td>TRUE or FALSE</td>
-				</tr>
-				<tr>
-					<th scope="row">range-start</th>
-					<td>if date-range is true, define a specific start range</td>
-					<td> YYYY-MM-DD</td> 
-				</tr>
-				<tr>
-					<th scope="row">range-end</th>
-					<td>if date-range is true, define a specific end range</td>
-					<td>YYYY-MM-DD</td>
-				</tr>
-				<tr>
-					<th scope="row">limit</th>
-					<td>returns specific number of events to display (default is 10)</td>
-					<td>any integer value</td>
-				</tr>
-				</tbody>
-			</table>
-			
-			
-			<form method="post" action="options.php">
-				
-				
-				<?php
-				
-					settings_fields('dca_events_plugin_option_group');
-					
-					do_settings_sections('dca-events-plugin-admin');
-					
-					submit_button();
-					?>
-			</form>
-				
-			
-		
-		</div>
-	<?php }
-
-	// Function for intializing fields
-	public function dca_events_plugin_page_init()
-	{
-		// Register the settings
-		register_setting(
-			// option_group
-			'dca_events_plugin_option_group',
-			// option_name
-			'dca_events_plugin_option_name',
-			// sanitize_callback
-			array($this, 'dca_events_plugin_sanitize')
-		);
-		// Add the settings 
-		add_settings_section(
-			// id
-			'dca_events_plugin_setting_section',
-			// title
-			'Events Page Settings',
-			// callback
-			array($this, 'dca_events_plugin_section_info'),
-			// page
-			'dca-events-plugin-admin' 
-		);
-		// Adding the fields
-		add_settings_field(
-			// id
-			'venue_id',
-			// title
-			'Site ID',
-			// callback
-			array($this, 'venue_id_callback'),
-			// page
-			'dca-events-plugin-admin',
-			// section
-			'dca_events_plugin_setting_section' 
-		);
-		
-	}
-
-	// Function to sanitize the inputs
-	public function dca_events_plugin_sanitize($input)
-	{
-		$sanitary_values = array();
-		if (isset($input['venue_id'])) {
-			$sanitary_values['venue_id'] = $input['venue_id'];
-		}
-
-		return $sanitary_values;
-	}
-
-
-	public function dca_events_plugin_section_info()
-	{ // left blank intentionally
-		?>
-		
-		<p>Events page will display events based on the selected site id. </p>									
-		
-		<p>View events page: <em><?php echo "<a target='_blank' href='".site_url() . "/events"."'>". site_url() . "/events"."</a>"; ?></em></p>
-		
-		<?php		
-		
-	}
-
-	// Callback function for retreiving venues
-	public function venue_id_callback()
-	{
-		// Base URL for venues
-		$url = "https://test-dca-mc.nmdca.net/wp-json/tribe/events/v1/venues?per_page=100";
-
-		$response_data = api_request($url);
-		
-		// for loop for looping through all the venues and outputting a dropdown menu
-		?> 	
-		
-		
-				<select name="dca_events_plugin_option_name[venue_id]" id="venue_id"> ?>
-					
-					<?php
-					
-					 $all = (isset($this->dca_events_plugin_options['venue_id']) && $this->dca_events_plugin_options['venue_id'] == NULL )? 'selected' : '';
-					 
-					?>
-					
-					<option value="" <?php echo $all; ?> > 
-						All Sites
-					</option>
-					
-				<?php foreach ($response_data->venues as $venue) { ?>
-		
-									<?php
-									$selected = (isset($this->dca_events_plugin_options['venue_id']) &&
-										$this->dca_events_plugin_options['venue_id'] == $venue->id) ? 'selected' : ''; ?>
-									<option value="<?php echo $venue->id ?>" <?php echo $selected; ?> > 
-										<?php echo $venue->id . " - " . $venue->venue ?>
-									</option>
-		
-				<?php } ?>
-					</select>
-				<?php
-	}
-
-}
-// Plugin will only show if you are logged in as the administrator
-if (is_admin()){
-	$dca_events_plugin = new DCAEventsPlugin();
-}
+/**
+ * custom option and settings
+ */
+function dca_events_plugin_settings_init() {
 	
+	// Register a new setting for "dca_events_plugin" page.
+	register_setting( 'dca_events_plugin', 'dca_events_plugin_options' );
+
+	// Register a new section in the "dca_events_plugin" page.
+	add_settings_section(
+		'dca_events_plugin_section_dev_settings',
+		__( 'Plugin Events Page Settings', 'dca_events_plugin' ), 'dca_events_plugin_section_dev_settings_callback',
+		'dca_events_plugin'
+	);
+
+	// Register a new field in the "dca_events_plugin_section_dev_settings" section, inside the "dca_events_plugin" page.
+	add_settings_field(
+		'dca_events_plugin_option_venue', // As of WP 4.6 this value is used only internally.
+		                        // Use $args' label_for to populate the id inside the callback.
+			__( 'DCA Site ID', 'dca_events_plugin' ),
+		'dca_events_plugin_option_venue_cb',
+		'dca_events_plugin',
+		'dca_events_plugin_section_dev_settings',
+		array(
+			'label_for'         => 'dca_events_plugin_option_venue',
+			'class'             => 'dca_events_plugin_row',
+		)
+	);
+	
+	// Register a new field in the "dca_plugin_section_dev_settings" section, inside the "dca_plugin" page.
+	add_settings_field(
+		'dca_events_plugin_option_limit', // As of WP 4.6 this value is used only internally.
+		                        // Use $args' label_for to populate the id inside the callback.
+			__( 'Limit', 'dca_events_plugin' ),
+		'dca_events_plugin_option_limit_cb',
+		'dca_events_plugin',
+		'dca_events_plugin_section_dev_settings',
+		array(
+			'label_for'         => 'dca_events_plugin_option_limit',
+			'class'             => 'dca_events_plugin_row',
+		)
+	);
+}
+
+/**
+ * Register our dca_events_plugin_settings_init to the admin_init action hook.
+ */
+add_action( 'admin_init', 'dca_events_plugin_settings_init' );
 
 
+/**
+ * Custom option and settings:
+ *  - callback functions
+ */
 
 
+/**
+ * Developers section callback function.
+ *
+ * @param array $args  The settings array, defining title, id, callback.
+ */
+function dca_events_plugin_section_dev_settings_callback( $args ) {
+	?>
+	
+	<p class="lead">The events page will display the limited number of events based on the selected site id. </p>									
+	
+	<p>Preview events page: <em><?php echo "<a target='_blank' href='".site_url() . "/events"."'>". site_url() . "/events"."</a>"; ?></em></p>
+	
+	<b id="<?php echo esc_attr( $args['id'] ); ?>"><?php esc_html_e( 'Set the default values in the following options: ', 'dca_events_plugin' ); ?></b>
+	<?php
+}
 
+
+/**
+ *  Field callback functions
+ *
+ * WordPress has magic interaction with the following keys: label_for, class.
+ * - the "label_for" key value is used for the "for" attribute of the <label>.
+ * - the "class" key value is used for the "class" attribute of the <tr> containing the field.
+ * Note: you can add custom key value pairs to be used inside your callbacks.
+ *
+ * @param array $args
+ */
+
+
+function dca_events_plugin_option_venue_cb( $args ) {
+	// Get the value of the setting we've registered with register_setting()
+	$options = get_option( 'dca_events_plugin_options' );
+	
+	// API URL for venues
+	$url = $GLOBALS['API_BASE_URL'] . "/wp-json/tribe/events/v1/venues?per_page=100";
+	$response_data = api_request($url);
+	
+	?>
+	
+	<div class="form-group row">
+		<div class="col-12">
+			
+			<select class="form-control form-control-lg" name="dca_events_plugin_options[<?php echo esc_attr( $args['label_for'] ); ?>]" id="<?php echo esc_attr( $args['label_for'] ); ?>"> ?>
+				
+				<?php
+				
+				$all = (isset($options[ $args['label_for'] ]) && $options[ $args['label_for'] ] == NULL )? 'selected' : '';
+				
+				?>
+				<option value="" <?php echo $all; ?> > 
+					All Sites
+				</option>
+				
+				<?php foreach ($response_data->venues as $venue) { ?>
+					<?php
+					$selected = (isset($options[ $args['label_for'] ]) && $options[ $args['label_for'] ] == $venue->id) ? 'selected' : ''; ?>
+					<option value="<?php echo $venue->id ?>" <?php echo $selected; ?> > 
+						<?php echo $venue->id . " - " . $venue->venue ?>
+					</option>
+				<?php } ?>
+			</select>
+		</div>
+	</div>
+	
+	<p class="description"> 
+		<?php  esc_html_e( 'Defines the default site(s) to display events for.', 'dca_events_plugin' ); ?>
+	</p>
+	
+	<?php
+	
+		if ($options[ $args['label_for'] ] == NULL){
+			?>
+			<p class="description">Shortcode Usage Example: <small>[dca_events]</small> will display events for all sites.</p>
+			<?php
+		} else {
+			?>
+			<p class="description">Shortcode Usage Example: <small>[dca_events site="<?php echo $options[ $args['label_for'] ]; ?>"]</small> shortcode will display list of events for the selected site.</p>
+			<?php
+		}
+	?>
+	
+	
+	<?php
+}
+
+
+function dca_events_plugin_option_limit_cb( $args ) {
+	// Get the value of the setting we've registered with register_setting()
+	$options = get_option( 'dca_events_plugin_options' );
+
+	$val = (isset($options[ $args['label_for'] ]) && $options[ $args['label_for'] ] == NULL ) ?  10 : $options[ $args['label_for'] ];
+	
+	?>
+	
+	<div class="form-group row">
+		<div class="col-3">
+			<input class="form-control" type="number" id="<?php echo esc_attr( $args['label_for'] ); ?>" name="dca_events_plugin_options[<?php echo esc_attr( $args['label_for'] ); ?>]"
+	       min="1" max="100" value="<?php echo $val; ?>" placeholder="enter number">
+		</div>
+	</div>
+	
+	<p class="description">
+		<?php esc_html_e( 'Defines the number of events to display. ', 'dca_events_plugin' ); ?>
+	</p>
+	
+	<?php
+}
+
+/**
+ * Add the top level menu page.
+ */
+function dca_events_plugin_options_page() {
+	add_menu_page(
+		'DCA Events Plugin',
+		'DCA Events Plugin Settings',
+		'manage_options',
+		'dca_events_plugin',
+		'dca_events_plugin_options_page_html'
+	);
+}
+
+
+/**
+ * Register our dca_events_plugin_options_page to the admin_menu action hook.
+ */
+add_action( 'admin_menu', 'dca_events_plugin_options_page' );
+
+
+/**
+ * Top level menu callback function
+ */
+function dca_events_plugin_options_page_html() {
+	// check user capabilities
+	if ( ! current_user_can( 'manage_options' ) ) {
+		return;
+	}
+
+	// add error/update messages
+
+	// check if the user have submitted the settings
+	// WordPress will add the "settings-updated" $_GET parameter to the url
+	if ( isset( $_GET['settings-updated'] ) ) {
+		// add settings saved message with the class of "updated"
+		add_settings_error( 'dca_events_plugin_messages', 'dca_events_plugin_message', __( 'Settings Saved', 'dca_events_plugin' ), 'updated' );
+	}
+
+	// show error/update messages
+	settings_errors( 'dca_events_plugin_messages' );
+	?>
+	
+	<div class="container">
+		<h1 class="display-1 mb-3"><?php echo esc_html( get_admin_page_title() ); ?></h1>
+		
+		<h2>Plugin Shortcode</h2>
+		<p class="lead">Using the shortcode will display limited number of events by site id or date range.</p>			
+			
+		<b>Shortcode Options:</b>
+		<p>Create a post or page using the [dca_events *options] shortcode with avaliable options.</p>	
+		<table class="table table-sm table-bordered "  >
+			<thead class="table-light">
+				<tr>
+					<th scope="col">OPTION</th>
+					<th scope="col">DESCRIPTION</th>
+					<th scope="col">FORMAT</th>
+				</tr>
+			</thead>
+			<tbody class="table-group-divider">
+			<tr>
+		        <th scope="row">site</th>
+				<td>returns events for a specific site ID (default value can be set in the event page settings dropdown)</td>
+				<td>integer value</td>
+			</tr>
+			<tr>
+				<th scope="row">today</th>
+				<td>returns events for today's date</td>
+				<td>TRUE or FALSE</td>
+			</tr>
+			<tr>
+				<th scope="row">current-month</th>
+				<td>returns events for the current month</td>
+				<td>TRUE or FALSE</td>
+			</tr>
+			<tr>
+				<th scope="row">date-range</th>
+				<td>return events for specific date range</td>
+				<td>TRUE or FALSE</td>
+			</tr>
+			<tr>
+				<th scope="row">range-start</th>
+				<td>if date-range is true, defines a specific start date</td>
+				<td> YYYY-MM-DD</td> 
+			</tr>
+			<tr>
+				<th scope="row">range-end</th>
+				<td>if date-range is true, defines a specific end date</td>
+				<td>YYYY-MM-DD</td>
+			</tr>
+			<tr>
+				<th scope="row">limit</th>
+				<td>returns the number of events to display (default value of 10 can be overridden in the event page settings limit input field)</td>
+				<td>any integer value</td>
+			</tr>
+			</tbody>
+		</table>
+		
+		<b>Shortcode Usage Examples:</b>
+		<p class="mb-0"><small>[dca_events site="120" today="true"]</small> will return the default number of events (10) with today's date for the site with an id of 120 (New Mexico Museum of Art)</p>
+	
+		<p class="mb-0"><small>[dca_events limit="7" current-month="true"]</small> will return 7 events for the current month</p>
+		
+		<p><small>[dca_events limit="20" date-range="true" range-start="2023-07-19" range-end="2023-07-23"]</small> will return a maximum of 20 events between July 19, 2023 and July 23, 2023.</p>
+		
+		<hr class="mt-4 mb-4">
+		
+		
+		<form action="options.php" method="post" >
+			<?php
+			// output security fields for the registered setting "dca_plugin"
+			settings_fields( 'dca_events_plugin' );
+			// output setting sections and their fields
+			// (sections are registered for "dca_plugin", each field is registered to a specific section)
+			do_settings_sections( 'dca_events_plugin' );
+			// output save settings button
+			//submit_button( 'Save Settings' ,  "btn btn-secondary" ); 
+			?>
+			<input type="submit" name="submit" id="submit" class="btn btn-secondary" value="Save Settings">
+			
+		</form>
+		
+	</div>
+	<?php
+}
 
 
 /*--------------------------------------------------
@@ -521,7 +606,7 @@ function customThemeRedirect()
 
 		//use shortcode function to pass output of events
 		$data = array(
-			'events' => dca_events_plugin()
+			'events' => dca_events_shortcode()
 		);
 		 // filename of template
 		$filename = 'events.php';
